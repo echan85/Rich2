@@ -37,8 +37,7 @@ $(function() {
   
   var canvas = document.getElementById("canvas");
   var context = canvas.getContext('2d');
-  var playAni = false;
-  
+
   var MenuOptions = [
     {
       type: "menu",
@@ -105,11 +104,98 @@ $(function() {
 
   var Levels = {
     taiwan: {
-      playerList: ["atuzai"],
+      playerList: ["atuzai"], // atuzai, dalaoqian, sunxiaomei, diana
       mapInfo: null, // TODO: Generate the map info
       mapImg: loadImage("map.png"),
       mapSize: 36, // There are 36x36 blocks in the map
       startPos: [{x: 20, y: 7}, {x: 20, y:6}, {x: 20, y: 5}, {x: 20, y: 4}],
+      cityList: {
+        nantou: {
+          price: 500,
+          blockIDs: [],
+          display: "南投縣"
+        },
+        taidong: {
+          price: 1000,
+          blockIDs: [],
+          display: "台東縣"
+        },
+        taizhong: {
+          price: 1400,
+          blockIDs: [],
+          display: "台中市"
+        },
+        taipei: {
+          price: 2500,
+          blockIDs: [],
+          display: "台北市"
+        },
+        tainan: {
+          price: 2000,
+          blockIDs: [],
+          display: "台南市"
+        },
+        jilong: {
+          price: 2000,
+          blockIDs: [],
+          display: "基隆市"
+        },
+        tailuge: {
+          price: 900,
+          blockIDs: [],
+          display: "太魯閣"
+        },
+        yilan: {
+          price: 1200,
+          blockIDs: [],
+          display: "宜蘭縣"
+        },
+        pingdong: {
+          price: 1400,
+          blockIDs: [],
+          display: "屏東縣"
+        },
+        xinzhu: {
+          price: 1600,
+          blockIDs: [],
+          display: "新竹市"
+        },
+        taoyuan: {
+          price: 2200,
+          blockIDs: [],
+          display: "桃園縣"
+        },
+        penghu: {
+          price: 600,
+          blockIDs: [],
+          display: "澎湖"
+        },
+        hualian: {
+          price: 1500,
+          blockIDs: [],
+          display: "花蓮縣"
+        },
+        suao: {
+          price: 800,
+          blockIDs: [],
+          display: "蘇澳"
+        },
+        yunlin: {
+          price: 1600,
+          blockIDs: [],
+          display: "雲林縣"
+        },
+        gaoxiong: {
+          price: 2300,
+          blockIDs: [],
+          display: "高雄市"
+        },
+        eluanbi: {
+          price: 700,
+          blockIDs: [],
+          display: "鹅栾鼻"
+        }
+      },
     }
   };
 
@@ -168,6 +254,8 @@ $(function() {
     date: 1,
 
     keyPressed: function(e) {
+      // If the animation is playing, then disable keyboard intrupt
+      if (Players[Game.currentPlayer].isMoving) return;
       var kc = e.keyCode;
       //console.log("KeyPressed " + kc);
       switch (kc) {
@@ -264,6 +352,7 @@ $(function() {
       this.AnimateLoop = setInterval(animate, AnimationTimeout);
     },
     drawSidebar: function() {
+      context.drawImage(Game.coverImg, 0, 0);
       // Date
       context.font = "30px sans-serif";
       context.fillStyle = "black";
@@ -291,10 +380,10 @@ $(function() {
     Game.drawMap(cPlayer.position.x, cPlayer.position.y);
     // Draw players
     Game.drawPlayer();
-    // Draw overlay: menus, sidebar
-    context.drawImage(Game.coverImg, 0, 0);
     // Draw sidebar
     Game.drawSidebar();
+    // If the animation is playing, then disable keyboard intrupt
+    if (cPlayer.isMoving) return;
     // Check if cursor is pointing at sth
     Game.checkOverObject();
     // Draw cursor
