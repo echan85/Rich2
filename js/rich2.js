@@ -4,6 +4,7 @@ var CanvasHeight = 480;
 var GridLength = 48; // The width of each block in game
 var MapViewSize = 11; // The seen map is a 9x9 matrix with each block 48x48 px
 var MapViewLength = 432; // The partial map that player can see, the length is 9x48=432 px
+var MapViewHalfLength = 192;
 var MenuOptionHeight = 48;
 var MenuOptionWidth = 86;
 var SideBarWidth = 208; // Left side bar
@@ -13,12 +14,29 @@ var HeadImgLength = 40;
 var BodyImgLength = 52;
 var HeadOffset = 30;
 var SpeedDelta = 2;
- 
+/**
+ Elements
+ 1: Court
+ 2: Stock
+ 3: Chance
+ 4: News
+ 5: Tax
+ 6: Casino
+ 7: Park
+ 8: CommunityChest
+ 9: Carnival
+ 10: Hospital
+ 11: Jail
+ 12: Bank
+ 13: Market
+ 14: Road
+ 15: Road with land
+*/
+
 $(function() {
   
   var canvas = document.getElementById("canvas");
   var context = canvas.getContext('2d');
-  var currentPlayer = "atuzai";
   var playAni = false;
   
   var MenuOptions = [
@@ -31,8 +49,7 @@ $(function() {
       width: MenuOptionWidth,
       height: MenuOptionHeight,
       action: function() {
-        console.log(currentPlayer + " invoked dice");
-        Players[currentPlayer].dice();
+        Players[Game.currentPlayer].dice();
         playAni = true;
       }
     },
@@ -88,31 +105,37 @@ $(function() {
 
   var Levels = {
     taiwan: {
-      map: null,   // TODO: Generate the map info
+      playerList: ["atuzai"],
+      mapInfo: null, // TODO: Generate the map info
+      mapImg: loadImage("map.png"),
       mapSize: 36, // There are 36x36 blocks in the map
+      startPos: [{x: 20, y: 7}, {x: 20, y:6}, {x: 20, y: 5}, {x: 20, y: 4}],
     }
   };
 
   var Players = {
     "atuzai": {
+      isMoving: false,
       name: "阿土仔",
       cash: 25000,
-      deposite: 25000,
+      deposit: 25000,
       headimg: loadImage("atuzaihead.png"),
       bodyimg: loadImage("carright.png"),
-      position: {x: 5 * GridLength, y: 5 * GridLength},
       status: 0,
       towards: null,
+      position: {x:0,y:0},
+      gamePos: {x:0,y:0},
+      viewPos: {x:GridLength*4,y:GridLength*4},
       dice: function() {
         if (Game.debug) {
           this.towards = new Array();
-          this.towards.push({x: 8 * GridLength, y: 4 * GridLength});
-          this.move();
+          this.towards.push({x: 28 * GridLength, y: 14 * GridLength});
+          this.isMoving = true;
         }
       },
       move: function() {
         if (this.towards == null || this.towards.length == 0) {
-          playAni = false;
+          this.isMoving = false;
           return;
         }
         var x = this.position.x;
@@ -126,7 +149,7 @@ $(function() {
         this.position.x = x;
         this.position.y = y;
         if (x == this.towards[0].x && y == this.towards[0].y) this.towards.shift();
-      }
+      },
     }
   }
 
@@ -137,6 +160,13 @@ $(function() {
     cursorPos: {x: 251, y: 45},
     overObjects: null,
     enterAction: null,
+    currentPlayer: null,
+    Months: [31,28,31,30,31,30,31,31,30,31,30,31],
+    PrimeMonths: [31,29,31,30,31,30,31,31,30,31,30,31],
+    year: 1993,
+    month: 1,
+    date: 1,
+
     keyPressed: function(e) {
       var kc = e.keyCode;
       //console.log("KeyPressed " + kc);
@@ -186,67 +216,85 @@ $(function() {
       }
     },
     drawMap: function(cx, cy) {
-      var gx = Math.floor(cx / GridLength);
-      var gy = Math.floor(cy / GridLength);
-      var ms = Levels.taiwan.mapSize; // 36
-      var leftmost = cx - 5; if (leftmost < 0) leftmost = 0;
-      var rightmost = cx + 5; if (rightmost >= ms) rightmost = ms - 1;
-      var topmost = cy - 5; if (topmost < 0) topmost = 0;
-      var bottommost = cy + 5; if (bottommost >= ms) bottommost = ms - 1;
-      for (var i=0; i<9; ++i) for (var j=0; j<9; ++j) {
-          context.drawImage(this.squares, Levels.taiwan.map[i * ms + j] * GridLength, 0, GridLength, GridLength, 
-                            SideBarWidth + i * GridLength, MenuOptionHeight + j * GridLength, GridLength, GridLength);
-      }
+      mapImgSX = cx - MapViewHalfLength;
+      mapImgSY = cy - MapViewHalfLength;
+      context.drawImage(Levels.taiwan.mapImg, mapImgSX, mapImgSY, MapViewLength, MapViewLength, 
+        SideBarWidth, MenuOptionHeight, MapViewLength, MapViewLength);
     },
-    drawPlayer: function(name) {
-      var player = Players[name];
-      var x = SideBarWidth + player.position.x;
-      var y = MenuOptionHeight + player.position.y;
-      //var x = SideBarWidth + GridLength * 4;
-      //var y = MenuOptionHeight + GridLength * 4;
+    drawPlayer: function() {
+      var player = Players[this.currentPlayer];
+      var x = SideBarWidth + player.viewPos.x;
+      var y = MenuOptionHeight + player.viewPos.y;
       context.drawImage(player.bodyimg, x, y);
       context.drawImage(player.headimg, x, y - HeadOffset);
     },
     load: function() {
       this.coverImg = loadImage("topcoverlay.png");
       this.cursorImg = loadImage("mouseup.png");
+      
       $(document).keypress(function(e) {
         Game.keyPressed(e);
       });
-      // Initialise objects
+      
       this.overObjects = new Array();
-      // Menu options
+      
       for (var i=0; i<MenuOptions.length; ++i) {
         this.overObjects.push(MenuOptions[i]);
       }
-      if (this.debug) {
-        Levels.taiwan.map = new Array();
-        var ms = Levels.taiwan.mapSize;
-        for (var i=0; i<ms; ++i) for (var j=0; j<ms; ++j) {
-          Levels.taiwan.map[i * ms + j] = Math.floor(Math.random() * 4);
-        }
+      
+      for (var i=0; i<Levels.taiwan.playerList.length; ++i) {
+        var playerid = Levels.taiwan.playerList[i];
+        Players[playerid].gamePos = Levels.taiwan.startPos[i];
+        Players[playerid].position.x = Players[playerid].gamePos.x * GridLength;        
+        Players[playerid].position.y = Players[playerid].gamePos.y * GridLength;
+        Players[playerid].viewPos.y -= GridLength * i;        
       }
-      this.squares = loadImage("mapelements.png");
+      
+      this.currentPlayer = Levels.taiwan.playerList[0];
+      
+      console.log("Player " + this.currentPlayer + " game pos x: " 
+        + Players[this.currentPlayer].gamePos.x + " y: " 
+        + Players[this.currentPlayer].gamePos.y);
+      console.log("Player " + this.currentPlayer + " position x: "
+        + Players[this.currentPlayer].position.x + " y: " 
+        + Players[this.currentPlayer].position.y);
     },
     AnimateLoop: null,
     run: function() {
       this.AnimateLoop = setInterval(animate, AnimationTimeout);
-    }
+    },
+    drawSidebar: function() {
+      // Date
+      context.font = "30px sans-serif";
+      context.fillStyle = "black";
+      context.fillText(this.year, 75, 48);
+      context.fillText(this.month + "   " + this.date, 83, 98);
+      // Name
+      context.font = "53px sans-serif";
+      context.fillStyle = 'gold';
+      context.fillText(Players[this.currentPlayer].name, 25, 176);
+      // Money
+      context.font = "32px sans-serif";
+      context.fillStyle = 'yellow';
+      context.fillText(Players[this.currentPlayer].cash, 90, 228);
+      context.fillText(Players[this.currentPlayer].deposit, 90, 275);
+    },
   }
-  
-  
   
   function animate() {
     context.clearRect(0, 0, CanvasWidth, CanvasHeight);
-    if (playAni) {
-      Players[currentPlayer].move();
+    var cPlayer = Players[Game.currentPlayer];
+    if (cPlayer.isMoving) {
+      Players[Game.currentPlayer].move();
     }
     // Draw seen map: 9x9 blocks
-    Game.drawMap(Players[currentPlayer].position.x, Players[currentPlayer].position.y);
+    Game.drawMap(cPlayer.position.x, cPlayer.position.y);
     // Draw players
-    Game.drawPlayer("atuzai");
+    Game.drawPlayer();
     // Draw overlay: menus, sidebar
     context.drawImage(Game.coverImg, 0, 0);
+    // Draw sidebar
+    Game.drawSidebar();
     // Check if cursor is pointing at sth
     Game.checkOverObject();
     // Draw cursor
