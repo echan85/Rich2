@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <title>Rich 2</title>
+  <script src="js/jquery.min.js"></script>
+  <style type="text/css">
+    canvas {
+      border:1px solid black;
+    }
+  </style>
+  <script>
+  var gridSize = 48;
+  var canvasWidth = 1728;
+  var canvasHeight = 1728;
+  $(function() {
+    $.ajax({
+      url: "./getmap.php",
+      dataType: "json",
+      success: function(blockList) {
+        for (var key in blockList) {
+          var block = blockList[key];
+          var x = block["x"] * gridSize;
+          var y = block["y"] * gridSize;
+          context.font = "15px sans-serif";
+          context.fillStyle = "white";
+          context.fillText(key, x, y + 25);
+          
+          context.beginPath();
+          context.lineWidth = 5;
+          context.strokeStyle = 'rgb(255,30,30)';
+          for (var dir in block["next"]) {
+            if (dir != 1) continue;
+            //if (dir != 2) continue;
+            //if (dir != 4) continue;
+            //if (dir != 8) continue;
+            var id = block["next"][dir];
+            var dx = blockList[id].x * gridSize;
+            var dy = blockList[id].y * gridSize;
+            context.moveTo(x + 24, y + 24);
+            context.lineTo(dx + 24, dy + 24);
+          }
+          context.stroke();
+        }
+      }
+    });
+    
+    var canvas = document.getElementById("map");
+    var context = canvas.getContext('2d');
+    
+    var img = new Image();
+    img.src = "image/taiwan.png";
+    context.drawImage(img, 0, 0);
+    console.log("draw minimap a");
+  
+    context.beginPath();
+    context.strokeStyle = 'rgba(30,0,0)';
+    for (var i=1; i<36; ++i) {
+      context.moveTo(0, gridSize * i);
+      context.lineTo(canvasWidth, gridSize * i);
+    }
+    for (var i=1; i<36; ++i) {
+      context.moveTo(gridSize * i, 0);
+      context.lineTo(gridSize * i, canvasHeight);
+    }
+    context.stroke();
+  });
+  </script>
+</head>
+<body>
+    <canvas id="map" width="1728" height="1728"></canvas>
+</body>
+</html>

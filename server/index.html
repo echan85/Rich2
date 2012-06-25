@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <title>Rich 2</title>
+  <script src="js/jquery.min.js"></script>
+  <script src="js/debug.js"></script>
+  <style type="text/css">
+    canvas {
+      border:1px solid black;
+    }
+  </style>
+  <script>
+  
+    function disablelabeling() {
+      labeling = false;
+    }
+  
+    var marker = new Array();
+    function submit() {
+      var blockid = $("#blockid").val()
+      var city = $("#city").val();
+      var step = $("#step").val();
+      var type = $("#type").val();
+      var block = {};
+      block.city = city;
+      block.step = step;
+      block.type = type;
+      block.owner = null;
+      block.booked = false;
+      block.building = 0;
+      block.callback = null; // callback function
+      block.x = bx;
+      block.y = by;
+    
+      var neigh = {};
+      var up = $("#up").val(); // 0001 1
+      var mask = 0;
+      if (up != null && up != "") {
+        neigh[1] = up;
+        mask |= 1;
+      }
+      var down = $("#down").val(); // 0010 2
+      if (down != null && down != "") {
+        neigh[2] = down;
+        mask |= 2;
+      }
+      var left = $("#left").val(); // 0100 4
+      if (left != null && left != "") {
+        neigh[4] = left;
+        mask |= 4;
+      }
+      var right = $("#right").val(); // 1000 8
+      if (right != null && right != "") {
+        neigh[8] = right;
+        mask |= 8;
+      }
+      
+      block.mask = mask;
+      block.next = neigh;
+      landList[blockid] = block;
+      console.log("blockid: " + blockid + " city: " + landList[blockid].city + 
+                  " step: " + landList[blockid].step + " owner: " + landList[blockid].owner +
+                  " mask: " + landList[blockid].mask);
+      for (var key in landList[blockid].next) {
+        console.log(key + " - " + landList[blockid].next[key]);
+      }
+      $.ajax({
+        url: "./record.php",
+        data: {"x": bx, "y": by, "up": up, "down": down, "left": left, "right": right, "blockid": blockid, "city": city, "step": step, "type": type},
+        success: function(data) {
+          console.log("added");
+        }
+      });
+    }
+    function finish() {
+      console.log(landList);
+    }
+  </script>
+</head>
+<body>
+  <div>
+    <canvas id="map" width="1728" height="1728"></canvas>
+  </div>
+  <div id="detail">
+    <input type="text" placeholder="blockid" id="blockid"/>
+    <input type="text" placeholder="city" id="city"/>
+    <input type="text" placeholder="type" id="type"/>
+    <input type="text" placeholder="up" id="up"/>
+    <input type="text" placeholder="right" id="right"/>
+    <input type="text" placeholder="down" id="down"/>
+    <input type="text" placeholder="left" id="left"/>
+    <input type="text" placeholder="step" id="step"/>
+    <button id="submit" class="white" onclick="submit();">Submit</button>
+  </div>
+  <button id="finish" class="white" onclick="finish();">Finish</button>
+  <button id="disable" class="white" onclick="disablelabeling();">Disable</button>
+</body>
+</html>
