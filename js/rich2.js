@@ -2,17 +2,16 @@
 var CanvasWidth = 640;
 var CanvasHeight = 480;
 var GridLength = 48; // The width of each block in game
-var MapViewSize = 11; // The seen map is a 9x9 matrix with each block 48x48 px
 var MapViewLength = 432; // The partial map that player can see, the length is 9x48=432 px
 var MapViewHalfLength = 192;
 var MenuOptionHeight = 48;
 var MenuOptionWidth = 86;
 var SideBarWidth = 208; // Left side bar
 var CursorMovement = 45;
-var AnimationTimeout = 20;
+var AnimationTimeout = 20; // 50 FPS
 var HeadImgLength = 40;
 var BodyImgLength = 52;
-var HeadOffset = 30;
+var HeadOffset = 35;
 var SpeedDelta = 2;
 /**
  Elements
@@ -109,6 +108,7 @@ $(function() {
       
       mapImg: loadImage("taiwan.png"),
       mapSize: 36, // There are 36x36 blocks in the map
+      MapLength: 1728,
       startPos: [{bid: 1, d: 2}, {bid: 87, d: 2}, {bid: 86, d: 2}, {bid: 143, d: 2}],
       cityList: {
         nantou: {
@@ -235,7 +235,6 @@ $(function() {
       deity: 0,
       position: {x:0,y:0},
       gamePos: {bid:0, d:0},
-      viewPos: {x:GridLength*4,y:GridLength*4},
       building: 0,
       stock: [],
       cards: [], // maximum: 9
@@ -324,7 +323,8 @@ $(function() {
     year: 1993,
     month: 1,
     date: 1,
-
+    mapOffsetX: 0,
+    mapOffsetY: 0,
     keyPressed: function(e) {
       // If the animation is playing, then disable keyboard intrupt
       if (Players[Game.currentPlayer].isMoving) return;
@@ -376,17 +376,36 @@ $(function() {
       }
     },
     drawMap: function(cx, cy) {
-      mapImgSX = cx - MapViewHalfLength;
-      mapImgSY = cy - MapViewHalfLength;
-      context.drawImage(Levels.taiwan.mapImg, mapImgSX, mapImgSY, MapViewLength, MapViewLength, 
-        SideBarWidth, MenuOptionHeight, MapViewLength, MapViewLength);
+      var lx = cx - MapViewHalfLength;
+      var rx = Levels.taiwan.MapLength - (cx + GridLength);
+      var uy = cy - MapViewHalfLength;
+      var dy = Levels.taiwan.MapLength - (cy + GridLength);
+      if (lx < 0) {
+        this.mapOffsetX = 0;
+      } else if (lx >= 0 && rx >=0) {
+        this.mapOffsetX = lx;
+      } else {
+        this.mapOffsetX = Levels.taiwan.MapLength - MapViewLength;
+      }
+      if (uy < 0) {
+        this.mapOffsetY = 0;
+      } else if (uy >= 0 && dy >=0) {
+        this.mapOffsetY = uy;
+      } else {
+        this.mapOffsetY = Levels.taiwan.MapLength - MapViewLength;
+      }      
+      context.drawImage(Levels.taiwan.mapImg, this.mapOffsetX, this.mapOffsetY, MapViewLength, MapViewLength, 
+          SideBarWidth, MenuOptionHeight, MapViewLength, MapViewLength);
     },
     drawPlayer: function() {
-      var player = Players[this.currentPlayer];
-      var x = SideBarWidth + player.viewPos.x;
-      var y = MenuOptionHeight + player.viewPos.y;
-      context.drawImage(player.bodyimg, x, y);
-      context.drawImage(player.headimg, x, y - HeadOffset);
+      for (var i=0; i<Levels.taiwan.playerList.length; ++i) {
+        var playername = Levels.taiwan.playerList[i];
+        var player = Players[playername];
+        var x = SideBarWidth + player.position.x - this.mapOffsetX;
+        var y = MenuOptionHeight + player.position.y - this.mapOffsetY;
+        context.drawImage(player.bodyimg, x, y);
+        context.drawImage(player.headimg, x, y - HeadOffset);
+      }
     },
     load: function() {
       this.coverImg = loadImage("topcoverlay.png");
@@ -458,7 +477,7 @@ $(function() {
     // Draw sidebar
     Game.drawSidebar();
     // If the animation is playing, then disable keyboard intrupt
-    if (cPlayer.isMoving) return;
+    if (Players.isMoving) return;
     // Check if cursor is pointing at sth
     Game.checkOverObject();
     // Draw cursor
