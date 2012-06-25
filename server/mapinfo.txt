@@ -85,7 +85,7 @@
 {"owner":null,"booked":null,"building":0,"callback":null,"x":"23","y":"5","step":"1","id":"83","next":{"4":"84"},"mask":4,"type":"15"}
 {"owner":null,"booked":null,"building":0,"callback":null,"x":"22","y":"5","step":"1","id":"84","next":{"4":"85"},"mask":4,"type":"15"}
 {"owner":null,"booked":null,"building":0,"callback":null,"x":"21","y":"5","step":"1","id":"85","next":{"2":"88"},"mask":2,"type":"1"}
-{"owner":null,"booked":null,"building":0,"callback":null,"x":"21","y":"6","step":"1","id":"88","next":{"1":"85","2":"1","8":"89"},"mask":11,"type":"2"}
+{"owner":null,"booked":null,"building":0,"callback":null,"x":"21","y":"6","step":"1","id":"88","next":{"2":"1","8":"89"},"mask":10,"type":"2"}
 {"owner":null,"booked":null,"building":0,"callback":null,"x":"21","y":"7","step":"0","id":"93","next":{"1":"88"},"mask":1,"type":"2"}
 {"owner":null,"booked":null,"building":0,"callback":null,"x":"21","y":"8","step":"1","id":"94","next":{"1":"93"},"mask":1,"type":"15"}
 {"owner":null,"booked":null,"building":0,"callback":null,"x":"21","y":"9","step":"1","id":"95","next":{"1":"94"},"mask":1,"type":"15"}
@@ -122,7 +122,7 @@
 {"owner":null,"booked":null,"building":0,"callback":null,"x":"4","y":"16","step":"1","id":"112","next":{"4":"113"},"mask":4,"type":"15"}
 {"owner":null,"booked":null,"building":0,"callback":null,"x":"3","y":"16","step":"1","id":"113","next":{"4":"114"},"mask":4,"type":"15"}
 {"owner":null,"booked":null,"building":0,"callback":null,"x":"2","y":"16","step":"0","id":"114","next":{"2":"115"},"mask":2,"type":"8"}
-{"owner":null,"booked":null,"building":0,"callback":null,"x":"2","y":"17","step":"1","id":"115","next":{"1":"114","8":"116"},"mask":9,"type":"8"}
+{"owner":null,"booked":null,"building":0,"callback":null,"x":"2","y":"17","step":"1","id":"115","next":{"8":"116"},"mask":8,"type":"8"}
 {"owner":null,"booked":null,"building":0,"callback":null,"x":"21","y":"16","step":"1","id":"127","next":{"4":"126","8":"128"},"mask":12,"type":"15"}
 {"owner":null,"booked":null,"building":0,"callback":null,"x":"22","y":"16","step":"1","id":"128","next":{"4":"127","8":"129"},"mask":12,"type":"15"}
 {"owner":null,"booked":null,"building":0,"callback":null,"x":"23","y":"16","step":"1","id":"129","next":{"4":"128","8":"130"},"mask":12,"type":"15"}
@@ -134,10 +134,10 @@
 {"owner":null,"booked":null,"building":0,"callback":null,"x":"23","y":"25","step":"0","id":"136","next":[],"mask":0,"type":"10"}
 {"owner":null,"booked":null,"building":0,"callback":null,"x":"22","y":"24","step":"0","id":"137","next":[],"mask":0,"type":"10"}
 {"owner":null,"booked":null,"building":0,"callback":null,"x":"23","y":"24","step":"0","id":"138","next":[],"mask":0,"type":"10"}
-{"owner":null,"booked":null,"building":0,"callback":null,"x":"20","y":"5","step":"0","id":"86","next":{"2":"87"},"mask":2,"type":"1"}
-{"owner":null,"booked":null,"building":0,"callback":null,"x":"20","y":"6","step":"0","id":"87","next":{"2":"1"},"mask":2,"type":"2"}
+{"owner":null,"booked":null,"building":0,"callback":null,"x":"20","y":"5","step":"1","id":"86","next":{"2":"87"},"mask":2,"type":"1"}
+{"owner":null,"booked":null,"building":0,"callback":null,"x":"20","y":"6","step":"1","id":"87","next":{"2":"1"},"mask":2,"type":"2"}
 {"owner":null,"booked":null,"building":0,"callback":null,"x":"22","y":"6","step":"1","id":"89","next":{"8":"90"},"mask":8,"type":"15"}
 {"owner":null,"booked":null,"building":0,"callback":null,"x":"23","y":"6","step":"1","id":"90","next":{"8":"91"},"mask":8,"type":"15"}
 {"owner":null,"booked":null,"building":0,"callback":null,"x":"24","y":"6","step":"1","id":"91","next":{"8":"92"},"mask":8,"type":"15"}
 {"owner":null,"booked":null,"building":0,"callback":null,"x":"25","y":"6","step":"1","id":"92","next":{"8":"80"},"mask":8,"type":"15"}
-{"owner":null,"booked":null,"building":0,"callback":null,"x":"20","y":"4","step":"0","id":"143","next":{"2":"86"},"mask":2,"type":"1"}
+{"owner":null,"booked":null,"building":0,"callback":null,"x":"20","y":"4","step":"1","id":"143","next":{"2":"86"},"mask":2,"type":"1"}

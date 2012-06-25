@@ -22,9 +22,9 @@
           var block = blockList[key];
           var x = block["x"] * gridSize;
           var y = block["y"] * gridSize;
-          context.font = "15px sans-serif";
-          context.fillStyle = "white";
-          context.fillText(key, x, y + 25);
+          context.font = "25px sans-serif";
+          context.fillStyle = "red";
+          context.fillText(key + ":" + block['step'], x, y + 25);
           
           context.beginPath();
           context.lineWidth = 5;
@@ -41,6 +41,7 @@
             context.lineTo(dx + 24, dy + 24);
           }
           context.stroke();
+          
         }
       }
     });

@@ -1,17 +1,31 @@
 
 var map = null;
 var squares = null;
-$(function() {
-  
+var gridSize = 48;
+var canvasWidth = 1728;
+var canvasHeight = 1728;
+var landList = new Array();
+var bx;
+var by;
+var context;
+
+$(function() {  
+  $("#detail").hide();
   var canvas = document.getElementById("map");
-  var context = canvas.getContext('2d');
-  var gridSize = 12;
-  var canvasWidth = 432;
-  var canvasHeight = 432;
+  context = canvas.getContext('2d');
+  
+  $("#map").click(function(e){
+    var mx = e.pageX
+    var my = e.pageY;
+    console.log("mouse " + mx + " " + my);
+    bx = Math.floor(mx / gridSize);
+    by = Math.floor(my / gridSize);
+    console.log("block " + bx + " " + by);
+    $("#detail").show();
+  });
   
   var img = new Image();
-  img.src = "image/minimap.png";
-
+  img.src = "image/taiwan.png";
   context.drawImage(img, 0, 0);
   console.log("draw minimap a");
 
@@ -26,5 +40,8 @@ $(function() {
     context.lineTo(gridSize * i, canvasHeight);
   }
   context.stroke();
+  
+
+  
   
 });
