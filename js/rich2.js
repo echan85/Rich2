@@ -71,31 +71,32 @@ $(function() {
   var currentLevel;
   var mapSize;
   var mapInfo;
+  var mapImg;
   var playerList;
   var currentPlayer;
   var currentPlayerIndex;
   var maxNumOfPlayers;
 
   function drawMap(cx, cy) {
-    var lx = cx - MapViewHalfLength;
-    var rx = Levels.taiwan.MapLength - (cx + GridLength) - MapViewHalfLength;
-    var uy = cy - MapViewHalfLength;
-    var dy = Levels.taiwan.MapLength - (cy + GridLength) - MapViewHalfLength;
-    if (lx < 0) {
+    var llx = cx - MapViewHalfLength;
+    var rrx = currentLevel.MapLength - (cx + GridLength) - MapViewHalfLength;
+    var uuy = cy - MapViewHalfLength;
+    var ddy = currentLevel.MapLength - (cy + GridLength) - MapViewHalfLength;
+    if (llx < 0) {
       mapOffsetX = 0;
-    } else if (lx >= 0 && rx >=0) {
-      mapOffsetX = lx;
+    } else if (llx >= 0 && rrx >=0) {
+      mapOffsetX = llx;
     } else {
-      mapOffsetX = Levels.taiwan.MapLength - MapViewLength;
+      mapOffsetX = currentLevel.MapLength - MapViewLength;
     }
-    if (uy < 0) {
+    if (uuy < 0) {
       mapOffsetY = 0;
-    } else if (uy >= 0 && dy >=0) {
-      mapOffsetY = uy;
+    } else if (uuy >= 0 && ddy >=0) {
+      mapOffsetY = uuy;
     } else {
-      mapOffsetY = Levels.taiwan.MapLength - MapViewLength;
+      mapOffsetY = currentLevel.MapLength - MapViewLength;
     }
-    context.drawImage(Levels.taiwan.mapImg, mapOffsetX, mapOffsetY, MapViewLength, MapViewLength, 
+    context.drawImage(mapImg, mapOffsetX, mapOffsetY, MapViewLength, MapViewLength, 
         SideBarWidth, MenuOptionHeight, MapViewLength, MapViewLength);
     
     // Find which bought lands need to be displayed
@@ -121,10 +122,16 @@ $(function() {
     }
     for (var i=lx; i<=rx; ++i) {
       var array = soldLands[i];
-      for (var j=0; j<array.length; ++j) {
-        var ly = array[j].ly;
+      for (var j in array) {
+        var block = array[j];
+        var ly = block.ly;
         if (ty <= ly && ly <= by) {
-          // TODO: draw sold land
+          var owner = block.owner;
+          var x = SideBarWidth + block.mx - mapOffsetX;
+          var y = MenuOptionHeight + block.my - mapOffsetY;
+          context.drawImage(LandMarkersImg, owner * GridLength, 0, GridLength, GridLength,
+            x, y, GridLength, GridLength);
+          //console.log(lx + " " + rx + " " + owner + " " + x + " " + y);
         }
       }
     }
@@ -170,6 +177,12 @@ $(function() {
   } 
   
   function turnToNextPlayer() {
+    // First check if current player is bankrupt
+    if (currentPlayer.cash == 0 && currentPlayer.deposit <= 0) {
+      currentPlayer.alive = false;
+      // TODO: bankrupt ani
+      console.log(currentPlayer.name + " is bankrupt!");
+    }
     do {
       currentPlayerIndex = (currentPlayerIndex + 1) % maxNumOfPlayers;
       currentPlayer = Players[playerList[currentPlayerIndex]];
@@ -655,10 +668,10 @@ $(function() {
 
     context.font = "43px sans-serif";
     context.fillStyle = "black";
-    context.fillText("公   園", 322, 142);
+    context.fillText("卡   片", 322, 142);
 
     context.fillStyle = "yellow";
-    context.fillText("公   園", 320, 140);
+    context.fillText("卡   片", 320, 140);
 
     drawPlayer();
     drawSidebar();
@@ -678,10 +691,10 @@ $(function() {
 
     context.font = "43px sans-serif";
     context.fillStyle = "black";
-    context.fillText("公   園", 322, 142);
+    context.fillText("游 乐 场", 322, 142);
 
     context.fillStyle = "yellow";
-    context.fillText("公   園", 320, 140);
+    context.fillText("游 乐 场", 320, 140);
 
     drawPlayer();
     drawSidebar();
@@ -705,10 +718,10 @@ $(function() {
 
     context.font = "43px sans-serif";
     context.fillStyle = "black";
-    context.fillText("公   園", 322, 142);
+    context.fillText("医   院", 322, 142);
 
     context.fillStyle = "yellow";
-    context.fillText("公   園", 320, 140);
+    context.fillText("医   院", 320, 140);
 
     drawPlayer();
     drawSidebar();
@@ -728,10 +741,10 @@ $(function() {
 
     context.font = "43px sans-serif";
     context.fillStyle = "black";
-    context.fillText("公   園", 322, 142);
+    context.fillText("监   狱", 322, 142);
 
     context.fillStyle = "yellow";
-    context.fillText("公   園", 320, 140);
+    context.fillText("监   狱", 320, 140);
 
     drawPlayer();
     drawSidebar();
@@ -751,10 +764,10 @@ $(function() {
 
     context.font = "43px sans-serif";
     context.fillStyle = "black";
-    context.fillText("公   園", 322, 142);
+    context.fillText("路過銀行", 322, 142);
 
     context.fillStyle = "yellow";
-    context.fillText("公   園", 320, 140);
+    context.fillText("路過銀行", 320, 140);
 
     drawPlayer();
     drawSidebar();
@@ -778,10 +791,10 @@ $(function() {
 
     context.font = "43px sans-serif";
     context.fillStyle = "black";
-    context.fillText("公   園", 322, 142);
+    context.fillText("黑   市", 322, 142);
 
     context.fillStyle = "yellow";
-    context.fillText("公   園", 320, 140);
+    context.fillText("黑   市", 320, 140);
 
     drawPlayer();
     drawSidebar();
@@ -812,23 +825,117 @@ $(function() {
     }
   }
   
-  var kpPassby = false;
+  function drawPurchaseDialog() {
+    context.fillStyle = "black";
+    context.font = "35px sans-serif";  
+    context.fillText("買下此地", 322, 249);
+    context.fillStyle = "blue";
+    context.fillText("買下此地", 320, 247);
+
+    context.font = "25px sans-serif";
+    if (passbyResult) {
+      context.fillStyle = "orange";
+    } else {    
+      context.fillStyle = "black";
+    }
+    context.fillText("Yes", 474, 227);
+    
+    if (!passbyResult) {
+      context.fillStyle = "orange";
+    } else {    
+      context.fillStyle = "black";
+    }
+    context.fillText("No", 474, 262);
+  }
+  
+  function drawLandNamePrice(param) {
+    var n = param[0];
+    var p = param[1];
+    context.drawImage(LandLabelImg, 312, 80);
+    // Shadows
+    context.fillStyle = "black";
+    context.font = "35px sans-serif";
+    context.fillText(n, 354,132);
+
+    context.font = "30px sans-serif";
+    context.fillText(p, 408, 188);
+
+    // Text
+    context.font = "35px sans-serif";
+    context.fillStyle = "white";
+    context.fillText(n, 352,130);
+
+    context.font = "30px sans-serif";
+    context.fillStyle = "red";
+    context.fillText(p, 406, 186);      
+  }
+  
+  function buyEmptyLand(block, price) {
+    console.log(currentPlayer.name + " bought " + block.c);
+    block.owner = currentPlayerIndex;
+    currentPlayer.cash -= price;
+    soldLands[block.lx].push(block);
+  }
+  
+  var passbyKeypressed = false;
   var passbyResult = true;
+  var passbyDelay = 0;
+  var passbyInDelay = false;
+  var passbyPlayAni = null;
+  var passbyPlayAniParam = null;
   function ani_passby() {
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
     drawPlayer();
     drawSidebar();
     drawDice(Players.dice1 - 1, Players.dice2 - 1);
+    if (passbyPlayAni) {
+      passbyPlayAni(passbyPlayAniParam);
+    }
+    
+    // Clean up
+    if (passbyInDelay) {
+      if (passbyDelay < 50) {
+        ++passbyDelay;
+      } else {
+        passbyResult = true;
+        passbyKeypressed = false;
+        passbyInDelay = false;
+        passbyPlayAni = null;
+        passbyPlayAniParam = null;
+        passbyDelay = 0;
+        cursorPos.x = CursorPositions[0].x;
+        cursorPos.y = CursorPositions[0].y;
+        turnToNextPlayer();
+        Game.status = 0;
+      }
+      return;
+    } 
+    // No need to draw cursor if it's in delay
+    drawCursor();
+
     var bid = currentPlayer.gamePos.bid;
     var block = mapInfo[bid];
     var owner = block.owner;
     var city = currentLevel.cityList[block.c];
-    if (owner) {
-      console.log("this place is sold to " + owner);
-    } else {
-      var name = city.display;
-      var price = city.price;
-      var money = currentPlayer.cash;
+    var name = city.display;
+    var price = city.price;
+    var money = currentPlayer.cash;
+
+    if (owner != null) { // The block was sold
+      console.log("this place is sold to " + playerList[owner]);
+      /*
+       *  TODO: - owner
+       *         - improvable? 
+       *           - Yes
+       *             - enough money?
+       *               - Yes: upgrade
+       *               - No: no ani
+       *           - No
+       *             - No: no ani
+       *        - competitor
+       *          - collect total rent of all blocks belonging to the same owner in the same city
+       */
+    } else { // Empty block
       if (money < price) {
         // TODO: not enough money
         console.log("not enough money");
@@ -838,74 +945,26 @@ $(function() {
         Game.status = 0;
         return;
       }
-      
-      // New block and money is enough
-      context.drawImage(LandLabelImg, 312, 80);
-      // Shadows
-      context.fillStyle = "black";
-      context.font = "35px sans-serif";
-      context.fillText(name, 354,132);
-  
-      context.fillText("買下此地", 322, 249);
+      passbyPlayAniParam = [name, price];
+      passbyPlayAni = drawLandNamePrice;
 
-      context.font = "30px sans-serif";
-      context.fillText(price, 408, 188);
-  
-      // Text
-      context.font = "35px sans-serif";
-      context.fillStyle = "white";
-      context.fillText(name, 352,130);
-
-      context.fillStyle = "blue";
-      context.fillText("買下此地", 320, 247);
-  
-      context.font = "30px sans-serif";
-      context.fillStyle = "red";
-      context.fillText(price, 406, 186);      
-      
-      context.font = "25px sans-serif";
-      if (passbyResult) {
-        context.fillStyle = "orange";
-      } else {    
-        context.fillStyle = "black";
-      }
-      context.fillText("Yes", 474, 227);
-      
-      if (!passbyResult) {
-        context.fillStyle = "orange";
-      } else {    
-        context.fillStyle = "black";
-      }
-      context.fillText("No", 474, 262);
-      
-      if (currentPlayer.human) {
-        if (kpPassby) {
+      if (!currentPlayer.human) {
+        // Robots have a simple strategy: just buy every empty block if they have enough money
+        buyEmptyLand(block, price);
+        passbyInDelay = true;
+      } else {
+        drawPurchaseDialog();
+        if (passbyKeypressed) {
           if (passbyResult) {
-            console.log(currentPlayer.name + " bought " + name);
-            block.owner = Game.currentPlayer;
-            currentPlayer.cash -= price;
-            soldLands[block.lx].push(block);
-            // TODO: draw land marker
+            buyEmptyLand(block, price);
           } else {
             console.log(currentPlayer.name + " didnt by " + name);
           }
-          passbyResult = true;
-          kpPassby = false;
-          cursorPos.x = CursorPositions[0].x;
-          cursorPos.y = CursorPositions[0].y;
-          turnToNextPlayer();
-          Game.status = 0;
-          return;
+          passbyInDelay = true;
+          passbyPlayAni = null;
+          passbyPlayAniParam = null;
         }
-      } else {
-        // TODO: add robot
-        // Return to default loop
-        cursorPos.x = CursorPositions[0].x;
-        cursorPos.y = CursorPositions[0].y;
-        turnToNextPlayer();
-        Game.status = 0;
       }
-      drawCursor();
     }
   }
 
@@ -924,7 +983,7 @@ $(function() {
       break;
     case 32: // space
     case 13: // enter
-      kpPassby = true;
+      passbyKeypressed = true;
       break;
     }
   }
@@ -975,15 +1034,16 @@ $(function() {
     dice1: 0,
     dice2: 0,
     dice: function() {
-      /*      
+      /*
       if (Game.debug) {
+        this.dice1 = 3;
+        this.dice2 = 3;
         this.path.push(93);
         this.path.push(88);
         this.path.push(89);
         this.path.push(90);
         this.path.push(91);
         this.path.push(92);
-        this.path.push(80);
         this.isMoving = true;
         currentPlayer.gamePos.bid = bid;
         currentPlayer.gamePos.d = dir;
@@ -1060,6 +1120,7 @@ $(function() {
       currentLevel = Levels[cl];
       mapSize = currentLevel.mapSize;
       mapInfo = currentLevel.mapInfo;
+      mapImg = currentLevel.mapImg;
       playerList = currentLevel.playerList;
       currentPlayerIndex = 0;
       maxNumOfPlayers = playerList.length;
@@ -1079,10 +1140,20 @@ $(function() {
         Players[playerindex].position.x = mapInfo[bid].x * GridLength;        
         Players[playerindex].position.y = mapInfo[bid].y * GridLength;
       }
-
+      
       soldLands = new Array();
       for (var i=0; i<mapSize; ++i) {
         soldLands.push(new Array());
+      }
+      
+      // Walk through mapInfo to multiply each block lx/ly with GridLength
+      // Doing is to reduce the calculation in drawMap()
+      for (var key in mapInfo) {
+        var block = mapInfo[key];
+        if (block.lx && block.ly) {
+          block.mx = block.lx * GridLength;
+          block.my = block.ly * GridLength;
+        }
       }
     },
     
