@@ -17,10 +17,11 @@ var DiceWidth = 54;
 var DiceHeight = 72;
 var mapOffsetX = 0;
 var mapOffsetY = 0;
-var coverImg = loadImage("topcoverlay.png");
-var cursorImg = loadImage("mouse.png");
-var diceImg = loadImage("dice.png");
-var landLabelImg = loadImage("landlabel.png");
+var CoverImg = loadImage("topcoverlay.png");
+var CursorImg = loadImage("mouse.png");
+var DiceImg = loadImage("dice.png");
+var LandLabelImg = loadImage("landlabel.png");
+var LandMarkersImg = loadImage("landmarker.png");
 var MenuSelectedImg = loadImage("menuselected.png");
 var CursorPositions = [
   {x: 251, y: 45},
@@ -40,7 +41,6 @@ var CursorPositions = [
   {x: 251, y: 45},
   {x: 508, y: 224}
 ];
-
 
 function loadImage(imgURL) {
   var image = new Image();
@@ -67,6 +67,14 @@ $(function() {
   var canvas = document.getElementById("canvas");
   var context = canvas.getContext('2d');
   var cursorPos = {x:CursorPositions[0].x, y:CursorPositions[0].y}; // Pointing at MenuOption "Move On" initially
+  var soldLands;
+  var currentLevel;
+  var mapSize;
+  var mapInfo;
+  var playerList;
+  var currentPlayer;
+  var currentPlayerIndex;
+  var maxNumOfPlayers;
 
   function drawMap(cx, cy) {
     var lx = cx - MapViewHalfLength;
@@ -89,32 +97,60 @@ $(function() {
     }
     context.drawImage(Levels.taiwan.mapImg, mapOffsetX, mapOffsetY, MapViewLength, MapViewLength, 
         SideBarWidth, MenuOptionHeight, MapViewLength, MapViewLength);
+    
+    // Find which bought lands need to be displayed
+    var gameX = Math.floor(cx / GridLength);
+    var gameY = Math.floor(cy / GridLength);
+    var lx = gameX - 5;
+    if (lx < 0) {
+      lx = 0;
+    }
+    var rx = lx + 10;
+    if (rx >= mapSize) {
+      rx = mapSize - 1;
+      lx = rx - 10;
+    }
+    var ty = gameY - 5;
+    if (ty < 0) {
+      ty = 0;
+    }
+    var by = ty + 10;
+    if (by >= mapSize) {
+      by = mapSize - 1;
+      ty = by - 10;
+    }
+    for (var i=lx; i<=rx; ++i) {
+      var array = soldLands[i];
+      for (var j=0; j<array.length; ++j) {
+        var ly = array[j].ly;
+        if (ty <= ly && ly <= by) {
+          // TODO: draw sold land
+        }
+      }
+    }
   }
   
   function drawSidebar() {
-    context.drawImage(coverImg, 0, 0);
+    context.drawImage(CoverImg, 0, 0);
     // Date
     context.font = "30px sans-serif";
     context.fillStyle = "black";
     context.fillText(Game.year, 75, 48);
     context.fillText(Game.month + "   " + Game.date, 83, 98);
-    var cPlayer = Players[Game.currentPlayer];
     // Name
     context.font = "53px sans-serif";
     context.fillStyle = 'gold';
-    context.fillText(cPlayer.name, 25, 176);
+    context.fillText(currentPlayer.name, 25, 176);
     // Money
     context.font = "32px sans-serif";
     context.fillStyle = 'yellow';
-    context.fillText(cPlayer.cash, 90, 228);
-    context.fillText(cPlayer.deposit, 90, 275);
+    context.fillText(currentPlayer.cash, 90, 228);
+    context.fillText(currentPlayer.deposit, 90, 275);
   }
 
   function drawPlayer() {
-    var len = Levels.taiwan.playerList.length;
-    var playerlist = Levels.taiwan.playerList;
-    for (var i=0; i<len; ++i) {
-      var playername = playerlist[i];
+    for (var i=0; i<playerList.length; ++i) {
+      var playername = playerList[i];
       var player = Players[playername];
       var playerposition = player.position;
       var x = SideBarWidth + playerposition.x - mapOffsetX;
@@ -125,7 +161,21 @@ $(function() {
   }
 
   function drawCursor() {
-    context.drawImage(cursorImg, cursorPos.x, cursorPos.y);
+    context.drawImage(CursorImg, cursorPos.x, cursorPos.y);
+  }
+  
+  function drawDice(d1, d2) {
+    context.drawImage(DiceImg, 54 * d1, 0, 54, 72, 55, 336, 54, 72);
+    context.drawImage(DiceImg, 54 * d2, 0, 54, 72, 119, 336, 54, 72);
+  } 
+  
+  function turnToNextPlayer() {
+    do {
+      currentPlayerIndex = (currentPlayerIndex + 1) % maxNumOfPlayers;
+      currentPlayer = Players[playerList[currentPlayerIndex]];
+    } while (!currentPlayer.alive);
+    console.log("turn to next player " + currentPlayer.name);
+    defaultEntered = false;
   }
   
   var OverObjects = [
@@ -361,23 +411,29 @@ $(function() {
    14: Road
    15: Road with land
   */
+  var defaultEntered = false;
   function ani_default() {
-    if (Players.isMoving) {
+    var mvg = Players.isMoving;
+    if (mvg) {
       Players.move();
     }
     // Draw seen map: 9x9 blocks
-    var cPlayer = Players[Game.currentPlayer];
-    drawMap(cPlayer.position.x, cPlayer.position.y);
+    drawMap(currentPlayer.position.x, currentPlayer.position.y);
     // Draw players
     drawPlayer();
     // Draw sidebar
     drawSidebar();
     // If the animation is playing, then disable keyboard intrupt
-    if (Players.isMoving) return;
-    // Check if cursor is pointing at sth
+    if (mvg) {
+      drawDice(Players.dice1 - 1, Players.dice2 - 1);
+      return;
+    }
     cko_default();
     // Draw cursor
     drawCursor();
+    if (!defaultEntered) {
+      drawDice(dice(), dice());
+    }
   }
   
   function cko_default() {
@@ -402,7 +458,6 @@ $(function() {
     // If the animation is playing, then disable keyboard intrupt
     if (Players.isMoving) return;
     var kc = e.keyCode;
-    var entered = false;
     //console.log("KeyPressed " + kc);
     switch (kc) {
     case 37: // left
@@ -423,11 +478,11 @@ $(function() {
       break;
     case 32: // space
     case 13: // enter
-      entered = true;
+      defaultEntered = true;
       break;
     }
     var action = cko_default();
-    if (entered) {
+    if (defaultEntered) {
       if (action) {
         console.log("Call enterAction");
         action();
@@ -439,6 +494,7 @@ $(function() {
   
   function ani_court() {
     console.log("court callback called");
+    turnToNextPlayer();
     Game.status = 0;
   }
   var obj_court = new Array();
@@ -448,8 +504,25 @@ $(function() {
   }
   
   function ani_stock() {
-    console.log("stock callback called");
-    Game.status = 0;
+    drawMap(currentPlayer.position.x, currentPlayer.position.y);
+    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+
+    context.font = "43px sans-serif";
+    context.fillStyle = "black";
+    context.fillText("股   市", 322, 142);
+
+    context.fillStyle = "yellow";
+    context.fillText("股   市", 320, 140);
+
+    drawPlayer();
+    drawSidebar();
+    if (parkDelay < 50) {
+      ++parkDelay;
+    } else {
+      parkDelay = 0;
+      turnToNextPlayer();
+      Game.status = 0;
+    }
   }
   
   function kp_stock(e) {
@@ -458,41 +531,167 @@ $(function() {
   
   function ani_chance() {
     console.log("chance callback called");
-    Game.status = 0;
+    drawMap(currentPlayer.position.x, currentPlayer.position.y);
+    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+
+    context.font = "43px sans-serif";
+    context.fillStyle = "black";
+    context.fillText("運   氣", 322, 142);
+
+    context.fillStyle = "yellow";
+    context.fillText("運   氣", 320, 140);
+
+    drawPlayer();
+    drawSidebar();
+    if (parkDelay < 50) {
+      ++parkDelay;
+    } else {
+      parkDelay = 0;
+      turnToNextPlayer();
+      Game.status = 0;
+    }
   }
 
   function ani_news() {
     console.log("news callback called");
-    Game.status = 0;
+    drawMap(currentPlayer.position.x, currentPlayer.position.y);
+    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+
+    context.font = "43px sans-serif";
+    context.fillStyle = "black";
+    context.fillText("新   聞", 322, 142);
+
+    context.fillStyle = "yellow";
+    context.fillText("新   聞", 320, 140);
+
+    drawPlayer();
+    drawSidebar();
+    if (parkDelay < 50) {
+      ++parkDelay;
+    } else {
+      parkDelay = 0;
+      turnToNextPlayer();
+      Game.status = 0;
+    }
   }
 
   function ani_tax() {
     console.log("tax callback called");
-    Game.status = 0;
+    drawMap(currentPlayer.position.x, currentPlayer.position.y);
+    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+
+    context.font = "43px sans-serif";
+    context.fillStyle = "black";
+    context.fillText("交   税", 322, 142);
+
+    context.fillStyle = "yellow";
+    context.fillText("交   税", 320, 140);
+
+    drawPlayer();
+    drawSidebar();
+    if (parkDelay < 50) {
+      ++parkDelay;
+    } else {
+      parkDelay = 0;
+      turnToNextPlayer();
+      Game.status = 0;
+    }
   }
 
   function ani_casino() {
     console.log("casino callback called");
-    Game.status = 0;
+    drawMap(currentPlayer.position.x, currentPlayer.position.y);
+    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+
+    context.font = "43px sans-serif";
+    context.fillStyle = "black";
+    context.fillText("賭   場", 322, 142);
+
+    context.fillStyle = "yellow";
+    context.fillText("賭   場", 320, 140);
+
+    drawPlayer();
+    drawSidebar();
+    if (parkDelay < 50) {
+      ++parkDelay;
+    } else {
+      parkDelay = 0;
+      turnToNextPlayer();
+      Game.status = 0;
+    }
   }
   
   function kp_casino(e) {
     console.log("casino keypressed called");
   }
 
+  var parkDelay = 0;
   function ani_park() {
-    console.log("park callback called");
-    Game.status = 0;
+    drawMap(currentPlayer.position.x, currentPlayer.position.y);
+    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+
+    context.font = "43px sans-serif";
+    context.fillStyle = "black";
+    context.fillText("公   園", 322, 142);
+
+    context.fillStyle = "yellow";
+    context.fillText("公   園", 320, 140);
+
+    drawPlayer();
+    drawSidebar();
+    if (parkDelay < 50) {
+      ++parkDelay;
+    } else {
+      parkDelay = 0;
+      turnToNextPlayer();
+      Game.status = 0;
+    }
   }
   
   function ani_commuchest() {
     console.log("community chest callback called");
-    Game.status = 0;
+    drawMap(currentPlayer.position.x, currentPlayer.position.y);
+    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+
+    context.font = "43px sans-serif";
+    context.fillStyle = "black";
+    context.fillText("公   園", 322, 142);
+
+    context.fillStyle = "yellow";
+    context.fillText("公   園", 320, 140);
+
+    drawPlayer();
+    drawSidebar();
+    if (parkDelay < 50) {
+      ++parkDelay;
+    } else {
+      parkDelay = 0;
+      turnToNextPlayer();
+      Game.status = 0;
+    }
   }
   
   function ani_carnival() {
     console.log("carnival callback called");
-    Game.status = 0;
+    drawMap(currentPlayer.position.x, currentPlayer.position.y);
+    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+
+    context.font = "43px sans-serif";
+    context.fillStyle = "black";
+    context.fillText("公   園", 322, 142);
+
+    context.fillStyle = "yellow";
+    context.fillText("公   園", 320, 140);
+
+    drawPlayer();
+    drawSidebar();
+    if (parkDelay < 50) {
+      ++parkDelay;
+    } else {
+      parkDelay = 0;
+      turnToNextPlayer();
+      Game.status = 0;
+    }
   }
   
   function kp_carnival(e) {
@@ -501,17 +700,71 @@ $(function() {
   
   function ani_hospital() {
     console.log("hospital callback called");
-    Game.status = 0;
+    drawMap(currentPlayer.position.x, currentPlayer.position.y);
+    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+
+    context.font = "43px sans-serif";
+    context.fillStyle = "black";
+    context.fillText("公   園", 322, 142);
+
+    context.fillStyle = "yellow";
+    context.fillText("公   園", 320, 140);
+
+    drawPlayer();
+    drawSidebar();
+    if (parkDelay < 50) {
+      ++parkDelay;
+    } else {
+      parkDelay = 0;
+      turnToNextPlayer();
+      Game.status = 0;
+    }
   }
   
   function ani_jail() {
     console.log("jail callback called");
-    Game.status = 0;
+    drawMap(currentPlayer.position.x, currentPlayer.position.y);
+    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+
+    context.font = "43px sans-serif";
+    context.fillStyle = "black";
+    context.fillText("公   園", 322, 142);
+
+    context.fillStyle = "yellow";
+    context.fillText("公   園", 320, 140);
+
+    drawPlayer();
+    drawSidebar();
+    if (parkDelay < 50) {
+      ++parkDelay;
+    } else {
+      parkDelay = 0;
+      turnToNextPlayer();
+      Game.status = 0;
+    }
   }
 
   function ani_bank() {
     console.log("bank callback called");
-    Game.status = 0;
+    drawMap(currentPlayer.position.x, currentPlayer.position.y);
+    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+
+    context.font = "43px sans-serif";
+    context.fillStyle = "black";
+    context.fillText("公   園", 322, 142);
+
+    context.fillStyle = "yellow";
+    context.fillText("公   園", 320, 140);
+
+    drawPlayer();
+    drawSidebar();
+    if (parkDelay < 50) {
+      ++parkDelay;
+    } else {
+      parkDelay = 0;
+      turnToNextPlayer();
+      Game.status = 0;
+    }
   }
   
   function kp_bank(e) {
@@ -520,7 +773,25 @@ $(function() {
 
   function ani_market() {
     console.log("market callback called");
-    Game.status = 0;
+    drawMap(currentPlayer.position.x, currentPlayer.position.y);
+    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+
+    context.font = "43px sans-serif";
+    context.fillStyle = "black";
+    context.fillText("公   園", 322, 142);
+
+    context.fillStyle = "yellow";
+    context.fillText("公   園", 320, 140);
+
+    drawPlayer();
+    drawSidebar();
+    if (parkDelay < 50) {
+      ++parkDelay;
+    } else {
+      parkDelay = 0;
+      turnToNextPlayer();
+      Game.status = 0;
+    }
   }
 
   function kp_market(e) {
@@ -529,92 +800,100 @@ $(function() {
 
   function ani_road() {
     console.log("road callback called");
-    Game.status = 0;
+    drawMap(currentPlayer.position.x, currentPlayer.position.y);
+    drawPlayer();
+    drawSidebar();
+    if (parkDelay < 50) {
+      ++parkDelay;
+    } else {
+      parkDelay = 0;
+      turnToNextPlayer();
+      Game.status = 0;
+    }
   }
   
   var kpPassby = false;
   var passbyResult = true;
   function ani_passby() {
-    //console.log("passby callback called");
-    var cPlayer = Players[Game.currentPlayer];
-    drawMap(cPlayer.position.x, cPlayer.position.y);
+    drawMap(currentPlayer.position.x, currentPlayer.position.y);
     drawPlayer();
     drawSidebar();
-    var bid = cPlayer.gamePos.bid;
-    var land = Levels.taiwan.mapInfo[bid];
-    var owner = land.owner;
-    var city = Levels.taiwan.cityList[land.c];
+    drawDice(Players.dice1 - 1, Players.dice2 - 1);
+    var bid = currentPlayer.gamePos.bid;
+    var block = mapInfo[bid];
+    var owner = block.owner;
+    var city = currentLevel.cityList[block.c];
     if (owner) {
       console.log("this place is sold to " + owner);
-      if (owner == Game.currentPlayer) {
-      }
     } else {
       var name = city.display;
       var price = city.price;
-      var money = cPlayer.cash;
+      var money = currentPlayer.cash;
       if (money < price) {
         // TODO: not enough money
         console.log("not enough money");
         cursorPos.x = CursorPositions[0].x;
         cursorPos.y = CursorPositions[0].y;
+        turnToNextPlayer();
         Game.status = 0;
         return;
       }
-      context.drawImage(landLabelImg, 312, 80);
+      
+      // New block and money is enough
+      context.drawImage(LandLabelImg, 312, 80);
       // Shadows
       context.fillStyle = "black";
       context.font = "35px sans-serif";
       context.fillText(name, 354,132);
   
+      context.fillText("買下此地", 322, 249);
+
       context.font = "30px sans-serif";
       context.fillText(price, 408, 188);
   
-      context.font = "35px sans-serif";
-      context.fillText("買下此地", 322, 249);
-      
       // Text
       context.font = "35px sans-serif";
       context.fillStyle = "white";
       context.fillText(name, 352,130);
+
+      context.fillStyle = "blue";
+      context.fillText("買下此地", 320, 247);
   
       context.font = "30px sans-serif";
       context.fillStyle = "red";
-      context.fillText(price, 406, 186);
-      
-      context.font = "35px sans-serif";
-      context.fillStyle = "blue";
-      context.fillText("買下此地", 320, 247);
+      context.fillText(price, 406, 186);      
       
       context.font = "25px sans-serif";
       if (passbyResult) {
-        context.fillStyle = "yellow";
+        context.fillStyle = "orange";
       } else {    
-        context.fillStyle = "pink";
+        context.fillStyle = "black";
       }
       context.fillText("Yes", 474, 227);
       
-      context.font = "25px sans-serif";
       if (!passbyResult) {
-        context.fillStyle = "yellow";
+        context.fillStyle = "orange";
       } else {    
-        context.fillStyle = "pink";
+        context.fillStyle = "black";
       }
       context.fillText("No", 474, 262);
       
-      if (cPlayer.human) {
+      if (currentPlayer.human) {
         if (kpPassby) {
           if (passbyResult) {
-            console.log(cPlayer.name + " bought " + name);
-            land.owner = Game.currentPlayer;
-            cPlayer.cash -= price;
+            console.log(currentPlayer.name + " bought " + name);
+            block.owner = Game.currentPlayer;
+            currentPlayer.cash -= price;
+            soldLands[block.lx].push(block);
             // TODO: draw land marker
           } else {
-            console.log(cPlayer.name + " didnt by " + name);
+            console.log(currentPlayer.name + " didnt by " + name);
           }
           passbyResult = true;
           kpPassby = false;
           cursorPos.x = CursorPositions[0].x;
           cursorPos.y = CursorPositions[0].y;
+          turnToNextPlayer();
           Game.status = 0;
           return;
         }
@@ -623,6 +902,7 @@ $(function() {
         // Return to default loop
         cursorPos.x = CursorPositions[0].x;
         cursorPos.y = CursorPositions[0].y;
+        turnToNextPlayer();
         Game.status = 0;
       }
       drawCursor();
@@ -648,6 +928,9 @@ $(function() {
       break;
     }
   }
+  var AnimateCallbacks = [ani_default, ani_court, ani_stock, ani_chance, ani_news, ani_tax, 
+        ani_casino, ani_park, ani_commuchest, ani_carnival, ani_hospital, ani_jail, ani_bank, 
+        ani_market, ani_road, ani_passby];
 
   /**
    * Deity
@@ -668,13 +951,15 @@ $(function() {
    */
   var Players = {
     "atuzai": {
+      alive: true,
+      id: 0, // unique id
       name: "阿土仔",
       human: false,
       description: "",
       cash: 25000,
       deposit: 25000,
       direction: 0, // 0: down, 1: right, 2: up, 3: left
-      headimg: loadImage("atuzaihead.png"),
+      headimg: loadImage("atuzaihead.png"), // TODO: sprite head images and body images
       bodyimg: loadImage("carright.png"),
       status: 0,
       deity: 0,
@@ -685,132 +970,130 @@ $(function() {
       cards: [], // maximum: 9
       land: [],
     },
+    path: [],
     isMoving: false, // use this boolean to block keyboard interupts
-    dice1: null,
-    dice2: null,
+    dice1: 0,
+    dice2: 0,
     dice: function() {
+      /*      
+      if (Game.debug) {
+        this.path.push(93);
+        this.path.push(88);
+        this.path.push(89);
+        this.path.push(90);
+        this.path.push(91);
+        this.path.push(92);
+        this.path.push(80);
+        this.isMoving = true;
+        currentPlayer.gamePos.bid = bid;
+        currentPlayer.gamePos.d = dir;
+        return;
+      }
+      */
       this.dice1 = dice() + 1;
       this.dice2 = dice() + 1;
-      this.path = new Array();
       var steps = this.dice1 + this.dice2;
-      console.log("steps " + steps);
-      var player = Players[Game.currentPlayer];
-      console.log("name " + player.name);
-      var bid = player.gamePos.bid;
-      var dir = player.gamePos.d;
-      var nextbid = null;
-      var nextdir = null;
-      while (steps) {
-        var block = Levels.taiwan.mapInfo[bid];
-        var nextlist = block.n;
-        var rev = 3 - dir; // Get rid of the opposite direction. 
-                           // so if the player was from the left block(e.g. x:1,y:1,d:2), 
-                           // then no going back at this block (e.g. x:2,y:1,d:1)
-        var set = [];
+      console.log(steps);
+      var bid = currentPlayer.gamePos.bid, dir = currentPlayer.gamePos.d, block, nextlist, rev, set;
+      do {
+        block = mapInfo[bid];
+        nextlist = block.n;
+        rev = 3 - dir;
+        set = [];
         for (var key in nextlist) {
           if (key == rev) continue;
           set.push(key);
         }
-        nextdir = set[Math.floor(Math.random() * set.length)];
-        nextbid = nextlist[nextdir];
-        this.path.push(nextbid);
-        bid = nextbid;
-        dir = nextdir;
-        console.log("bid " + bid + " dir " + dir);
-        steps -= Levels.taiwan.mapInfo[bid].s;
-      }
-      console.log(this.path);
+        dir = set[Math.floor(Math.random() * set.length)];
+        bid = nextlist[dir];
+        this.path.push(bid);
+        steps -= mapInfo[bid].s;
+      } while (steps);
+      currentPlayer.gamePos.bid = bid;
+      currentPlayer.gamePos.d = dir;
       this.isMoving = true;
-      Players[Game.currentPlayer].gamePos = {bid:bid, d:dir};
     },
+    
     move: function() {
-      var position = Players[Game.currentPlayer].position;
+      var position = currentPlayer.position;
       var x = position.x;
       var y = position.y;
       var bid = this.path[0];
-      //console.log("bid " + bid);
-      var tx = Levels.taiwan.mapInfo[bid].x * GridLength;
-      var ty = Levels.taiwan.mapInfo[bid].y * GridLength;
+      var block = mapInfo[bid];
+      var tx = block.x * GridLength;
+      var ty = block.y * GridLength;
       var dx = (tx - x) > 0 ? 1 : ((tx == x) ? 0 : -1);
       var dy = (ty - y) > 0 ? 1 : ((ty == y) ? 0 : -1);
       x += dx * SpeedDelta;
       y += dy * SpeedDelta;
-      Players[Game.currentPlayer].position = {x: x, y: y};
-      //console.log(Players[Game.currentPlayer].position);
+      currentPlayer.position.x = x;
+      currentPlayer.position.y = y;
       if (x == tx && y == ty) this.path.shift();
-      if (this.path == null || this.path.length == 0) {
+      if (this.path.length == 0) {
         this.isMoving = false;
-        Game.status = Levels.taiwan.mapInfo[bid].t;
-        console.log("set game status " + Game.status + " in players.move()");
         // set cursor position according to what game status is activated
-        cursorPos.x = CursorPositions[Game.status].x;
-        cursorPos.y = CursorPositions[Game.status].y;
-        console.log(cursorPos);
+        var t = block.t;
+        cursorPos.x = CursorPositions[t].x;
+        cursorPos.y = CursorPositions[t].y;
+        console.log("set cursor " + cursorPos.x + " " + cursorPos.y);
+        Game.status = t;
         return;
       }
     },
   }
-  
-  var Date = {
-    
-  };
 
+  var keyPressedCallbacks = [kp_default,kp_court, kp_stock, null, null, null, kp_casino, 
+      null, null, kp_carnival, null, null, kp_bank, kp_market, null, kp_passby];
+      
   var Game = {
     status: 0,
     debug: true,
-    waitingOrder: false,
-    currentPlayer: null,
-    currentLevel: null,
     Months: [31,28,31,30,31,30,31,31,30,31,30,31],
     PrimeMonths: [31,29,31,30,31,30,31,31,30,31,30,31],
     year: 1993,
     month: 1,
     date: 1,
     AnimateLoop: null,
-    keyPressedCallbacks: [kp_default,kp_court, kp_stock, null, null, null, kp_casino, 
-      null, null, kp_carnival, null, null, kp_bank, kp_market, null, kp_passby],
-    animateCallbacks: [ani_default, ani_court, ani_stock, ani_chance, ani_news, ani_tax, ani_casino, 
-      ani_park, ani_commuchest, ani_carnival, ani_hospital, ani_jail, ani_bank, ani_market, ani_road, 
-      ani_passby],
-
     load: function() {
+      // Initailize level and first player
+      var cl = "taiwan"; // Only single player for now
+      currentLevel = Levels[cl];
+      mapSize = currentLevel.mapSize;
+      mapInfo = currentLevel.mapInfo;
+      playerList = currentLevel.playerList;
+      currentPlayerIndex = 0;
+      maxNumOfPlayers = playerList.length;
+      currentPlayer = Players[playerList[currentPlayerIndex]];
+      currentPlayer.human = true;
+      
       // Bind key intrupt
       $(document).keypress(function(e) {
-        console.log("key interupt: " + Game.status);
-        console.log(Game.keyPressedCallbacks[Game.status]);
-        Game.keyPressedCallbacks[Game.status](e);
+        keyPressedCallbacks[Game.status](e);
       });
       
-      // Initialize players' positions
-      for (var i=0; i<Levels.taiwan.playerList.length; ++i) {
-        var playerid = Levels.taiwan.playerList[i];
-        Players[playerid].gamePos = Levels.taiwan.startPos[i];
-        var bid = Players[playerid].gamePos.bid;
-        Players[playerid].position.x = Levels.taiwan.mapInfo[bid].x * GridLength;        
-        Players[playerid].position.y = Levels.taiwan.mapInfo[bid].y * GridLength;
+      // Initialize players' positions in Game and Map coordinations
+      for (var i=0; i<playerList.length; ++i) {
+        var playerindex = playerList[i];
+        Players[playerindex].gamePos = currentLevel.startPos[i];
+        var bid = Players[playerindex].gamePos.bid;
+        Players[playerindex].position.x = mapInfo[bid].x * GridLength;        
+        Players[playerindex].position.y = mapInfo[bid].y * GridLength;
       }
-      
-      // Initailize level and first player
-      this.currentLevel = "taiwan";
-      this.currentPlayer = Levels[this.currentLevel].playerList[0];
-      Players[this.currentPlayer].human = true;
-      
-      console.log("Player " + this.currentPlayer + " game pos x: " 
-        + Players[this.currentPlayer].gamePos.x + " y: " 
-        + Players[this.currentPlayer].gamePos.y);
-      console.log("Player " + this.currentPlayer + " position x: "
-        + Players[this.currentPlayer].position.x + " y: " 
-        + Players[this.currentPlayer].position.y);
+
+      soldLands = new Array();
+      for (var i=0; i<mapSize; ++i) {
+        soldLands.push(new Array());
+      }
     },
     
     run: function() {
       this.AnimateLoop = setInterval(animate, AnimationTimeout);
-    },
+    }
   }
   
   function animate() {
     context.clearRect(0, 0, CanvasWidth, CanvasHeight);
-    Game.animateCallbacks[Game.status]();
+    AnimateCallbacks[Game.status]();
   }
   
   Game.load();
