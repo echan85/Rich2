@@ -1,0 +1,110 @@
+      cityList: {
+        nantou: {
+          price: 500, upgrade: 80,
+          rent: [0, 0, 750, 0, 0, 0],
+          blocks: [127, 128, 129],
+          display: "南投縣"
+        },
+        taidong: {
+          price: 1000, upgrade: 150,
+          rent: [200, 600, 1500, 0, 0, 0],
+          blocks: [47, 48, 49, 50],
+          display: "台東縣"
+        },
+        taizhong: {
+          price: 1400, upgrade: 200,
+          rent: [250, 0, 0, 0, 0, 0],
+          blocks: [98, 99, 100],
+          display: "台中市"
+        },
+        taipei: {
+          price: 2500, upgrade: 400,
+          rent: [500, 1500, 3750, 0, 0, 0],
+          blocks: [84, 83, 82, 81, 89, 90, 91, 92],
+          display: "台北市"
+        },
+        tainan: {
+          price: 2000, upgrade: 250,
+          rent: [400, 1200, 0, 0, 0, 0],
+          blocks: [17, 18, 19, 23, 24, 25],
+          display: "台南市"
+        },
+        jilong: {
+          price: 2000, upgrade: 300,
+          rent: [400, 1200, 3000, 6000, 0, 0],
+          blocks: [75, 76, 77],
+          display: "基隆市"
+        },
+        tailuge: {
+          price: 900, upgrade: 100,
+          rent: [160, 550, 1250, 2500, 0, 0],
+          blocks: [57, 58, 59],
+          display: "太魯閣"
+        },
+        yilan: {
+          price: 1200, upgrade: 160,
+          rent: [230, 700, 1600, 3000, 0, 8000],
+          blocks: [68, 69, 70, 71],
+          display: "宜蘭縣"
+        },
+        pingdong: {
+          price: 1400, upgrade: 200, 
+          rent: [250, 800, 2000, 0, 0, 0],
+          blocks: [33, 34, 35],
+          display: "屏東縣"
+        },
+        xinzhu: {
+          price: 1600, upgrade: 200,
+          rent: [300, 900, 0, 0, 0, 0],
+          blocks: [7, 8, 9],
+          display: "新竹市"
+        },
+        taoyuan: {
+          price: 2200, upgrade: 340,
+          rent: [440, 1300, 3200, 6400, 0, 0],
+          blocks: [2, 3, 4, 96, 95, 94],
+          display: "桃園縣"
+        },
+        penghu: {
+          price: 600, upgrade: 0,
+          rent: [0, 0, 0, 0, 0, 0],
+          blocks: [11, 12, 13],
+          display: "澎湖"
+        },
+        hualian: {
+          price: 1500, upgrade: 180,
+          rent: [300, 900, 0, 0, 0, 0],
+          blocks: [53, 54, 55],
+          display: "花蓮縣"
+        },
+        suao: {
+          price: 800, upgrade: 100,
+          rent: [150, 500, 1100, 2200, 0, 0],
+          blocks: [62, 63, 64, 65],
+          display: "蘇澳"
+        },
+        yunlin: {
+          price: 1600, upgrade: 0,
+          rent: [300, 0, 0, 0, 0, 0],
+          blocks: [139, 140, 141],
+          display: "雲林縣"
+        },
+        gaoxiong: {
+          price: 2300, upgrade: 360,
+          rent: [450, 1300, 0, 0, 0, 0],
+          blocks: [27, 28, 29, 30],
+          display: "高雄市"
+        },
+        eluanbi: {
+          price: 700, upgrade: 100,
+          rent: [140, 400, 0, 0, 0, 0],
+          blocks: [40, 41, 42],
+          display: "鹅栾鼻"
+        },
+        jiayi: {
+          price: 1500, upgrade: 180,
+          rent: [300, 900, 0, 0, 0, 7000],
+          blocks: [12, 13, 14],
+          display: "嘉義市"
+        }
+      },

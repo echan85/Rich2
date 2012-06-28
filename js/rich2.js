@@ -25,6 +25,10 @@ var LandMarkersImg = loadImage("landmarker.png");
 var MenuSelectedImg = loadImage("menuselected.png");
 var HeadImg = loadImage("head.png");
 var CarImg = loadImage("car.png");
+var BldgImg = loadImage("bldg.png");
+var BldgUpgradeMsg = [
+  "加蓋平房","改建店鋪","擴建商場","蓋商業大樓","建摩天大廈"
+];
 var CursorPositions = [
   {x: 251, y: 45},
   {x: 251, y: 45},
@@ -70,6 +74,7 @@ $(function() {
   var context = canvas.getContext('2d');
   var cursorPos = {x:CursorPositions[0].x, y:CursorPositions[0].y}; // Pointing at MenuOption "Move On" initially
   var soldLands;
+  var bldgLands;
   var currentLevel;
   var mapSize;
   var mapInfo;
@@ -78,7 +83,11 @@ $(function() {
   var currentPlayer;
   var currentPlayerIndex;
   var maxNumOfPlayers;
+  var cityList;
+/**
+ *           
 
+ */
   function drawMap(cx, cy) {
     var llx = cx - MapViewHalfLength;
     var rrx = currentLevel.MapLength - (cx + GridLength) - MapViewHalfLength;
@@ -133,7 +142,20 @@ $(function() {
           var y = MenuOptionHeight + block.my - mapOffsetY;
           context.drawImage(LandMarkersImg, owner * GridLength, 0, GridLength, GridLength,
             x, y, GridLength, GridLength);
-          //console.log(lx + " " + rx + " " + owner + " " + x + " " + y);
+        }
+      }
+    }
+    for (var i=lx; i<=rx; ++i) {
+      var array = bldgLands[i];
+      for (var j in array) {
+        var block = array[j];
+        var ly = block.ly;
+        if (ty <= ly && ly <= by) {
+          var owner = block.owner;
+          var x = SideBarWidth + block.mx - mapOffsetX;
+          var y = MenuOptionHeight + block.my - mapOffsetY;
+          context.drawImage(BldgImg, GridLength * (block.bldg - 1), 0, GridLength, GridLength,
+            x, y, GridLength, GridLength);
         }
       }
     }
@@ -189,8 +211,7 @@ $(function() {
   
   function turnToNextPlayer() {
     // First check if current player is bankrupt
-    if (currentPlayer.cash == 0 && currentPlayer.deposit <= 0) {
-      currentPlayer.alive = false;
+    if (!currentPlayer.alive) {
       // TODO: bankrupt ani
       console.log(currentPlayer.name + " is bankrupt!");
     }
@@ -324,93 +345,111 @@ $(function() {
       startPos: [{bid: 1, d: 3}, {bid: 87, d: 3}, {bid: 86, d: 3}, {bid: 143, d: 3}],
       cityList: {
         nantou: {
-          price: 500,
-          blockIDs: [],
+          price: 500, upgrade: 80,
+          rent: [0, 0, 750, 0, 0, 0],
+          blocks: [127, 128, 129],
           display: "南投縣"
         },
         taidong: {
-          price: 1000,
-          blockIDs: [],
+          price: 1000, upgrade: 150,
+          rent: [200, 600, 1500, 0, 0, 0],
+          blocks: [47, 48, 49, 50],
           display: "台東縣"
         },
         taizhong: {
-          price: 1400,
-          blockIDs: [],
+          price: 1400, upgrade: 200,
+          rent: [250, 0, 0, 0, 0, 0],
+          blocks: [98, 99, 100],
           display: "台中市"
         },
         taipei: {
-          price: 2500,
-          blockIDs: [],
+          price: 2500, upgrade: 400,
+          rent: [500, 1500, 3750, 0, 0, 0],
+          blocks: [84, 83, 82, 81, 89, 90, 91, 92],
           display: "台北市"
         },
         tainan: {
-          price: 2000,
-          blockIDs: [],
+          price: 2000, upgrade: 250,
+          rent: [400, 1200, 0, 0, 0, 0],
+          blocks: [17, 18, 19, 23, 24, 25],
           display: "台南市"
         },
         jilong: {
-          price: 2000,
-          blockIDs: [],
+          price: 2000, upgrade: 300,
+          rent: [400, 1200, 3000, 6000, 0, 0],
+          blocks: [75, 76, 77],
           display: "基隆市"
         },
         tailuge: {
-          price: 900,
-          blockIDs: [],
+          price: 900, upgrade: 100,
+          rent: [160, 550, 1250, 2500, 0, 0],
+          blocks: [57, 58, 59],
           display: "太魯閣"
         },
         yilan: {
-          price: 1200,
-          blockIDs: [],
+          price: 1200, upgrade: 160,
+          rent: [230, 700, 1600, 3000, 0, 8000],
+          blocks: [68, 69, 70, 71],
           display: "宜蘭縣"
         },
         pingdong: {
-          price: 1400,
-          blockIDs: [],
+          price: 1400, upgrade: 200, 
+          rent: [250, 800, 2000, 0, 0, 0],
+          blocks: [33, 34, 35],
           display: "屏東縣"
         },
         xinzhu: {
-          price: 1600,
-          blockIDs: [],
+          price: 1600, upgrade: 200,
+          rent: [300, 900, 0, 0, 0, 0],
+          blocks: [7, 8, 9],
           display: "新竹市"
         },
         taoyuan: {
-          price: 2200,
-          blockIDs: [],
+          price: 2200, upgrade: 340,
+          rent: [440, 1300, 3200, 6400, 0, 0],
+          blocks: [2, 3, 4, 96, 95, 94],
           display: "桃園縣"
         },
         penghu: {
-          price: 600,
-          blockIDs: [],
+          price: 600, upgrade: 0,
+          rent: [0, 0, 0, 0, 0, 0],
+          blocks: [11, 12, 13],
           display: "澎湖"
         },
         hualian: {
-          price: 1500,
-          blockIDs: [],
+          price: 1500, upgrade: 180,
+          rent: [300, 900, 0, 0, 0, 0],
+          blocks: [53, 54, 55],
           display: "花蓮縣"
         },
         suao: {
-          price: 800,
-          blockIDs: [],
+          price: 800, upgrade: 100,
+          rent: [150, 500, 1100, 2200, 0, 0],
+          blocks: [62, 63, 64, 65],
           display: "蘇澳"
         },
         yunlin: {
-          price: 1600,
-          blockIDs: [],
+          price: 1600, upgrade: 0,
+          rent: [300, 0, 0, 0, 0, 0],
+          blocks: [139, 140, 141],
           display: "雲林縣"
         },
         gaoxiong: {
-          price: 2300,
-          blockIDs: [],
+          price: 2300, upgrade: 360,
+          rent: [450, 1300, 0, 0, 0, 0],
+          blocks: [27, 28, 29, 30],
           display: "高雄市"
         },
         eluanbi: {
-          price: 700,
-          blockIDs: [],
+          price: 700, upgrade: 100,
+          rent: [140, 400, 0, 0, 0, 0],
+          blocks: [40, 41, 42],
           display: "鹅栾鼻"
         },
         jiayi: {
-          price: 1500,
-          blockIDs: [],
+          price: 1500, upgrade: 180,
+          rent: [300, 900, 0, 0, 0, 7000],
+          blocks: [12, 13, 14],
           display: "嘉義市"
         }
       },
@@ -434,6 +473,7 @@ $(function() {
    13: Market
    14: Road
    15: Road with land
+   16: Passing Bank
   */
   var defaultEntered = false;
   function ani_default() {
@@ -840,13 +880,33 @@ $(function() {
     }
   }
   
-  function drawPurchaseDialog() {
+  function drawUpgradePrice(param) {
+    var n = param[0];
+    var p = param[1];
+    // Shadows
     context.fillStyle = "black";
-    context.font = "35px sans-serif";  
-    context.fillText("買下此地", 322, 249);
-    context.fillStyle = "blue";
-    context.fillText("買下此地", 320, 247);
+    context.font = "35px sans-serif";
+    context.fillText(n, 292, 122);
 
+    context.font = "35px sans-serif";
+    context.fillText("投入資本 ", 292, 171);
+    context.font = "30px sans-serif";
+    context.fillText(p, 436, 171);
+
+    // Text
+    context.font = "35px sans-serif";
+    context.fillStyle = "blue";
+    context.fillText(n, 290, 120);
+
+    context.font = "35px sans-serif";
+    context.fillText("投入資本 ", 290, 169);      
+    context.font = "30px sans-serif";
+    context.fillStyle = "yellow";
+    context.fillText(p, 438, 169);
+
+  }
+  
+  function drawYesNoDialog() {
     context.font = "25px sans-serif";
     if (passbyResult) {
       context.fillStyle = "orange";
@@ -861,6 +921,43 @@ $(function() {
       context.fillStyle = "black";
     }
     context.fillText("No", 474, 262);
+
+  }
+  
+  function drawLandlordRental(param) {
+    var n = param[0];
+    var p = param[1];
+    context.beginPath();
+    context.rect(274, 123, 308, 87);
+    context.fillStyle = '#030B80';
+    context.fill();
+    context.lineWidth = 3;
+    context.strokeStyle = 'gray';
+    context.stroke();  
+    
+    context.fillStyle = "black";
+    context.font = "33px sans-serif";  
+    context.fillText("本地屬於", 312, 162);
+    context.fillText(n, 454, 162);
+    context.fillText("付租金", 342, 201);
+    context.fillText(p, 470, 203);
+
+    context.fillStyle = "yellow";
+    context.fillText("本地屬於", 310, 160);
+    context.fillStyle = "blue";
+    context.fillText(n, 452, 160);
+    context.fillText("付租金", 340, 199);
+    context.fillStyle = "orange";
+    context.fillText(p, 468, 201);
+  } 
+
+  function drawPurchaseDialog() {
+    context.fillStyle = "black";
+    context.font = "35px sans-serif";  
+    context.fillText("買下此地", 322, 249);
+    context.fillStyle = "blue";
+    context.fillText("買下此地", 320, 247);
+    drawYesNoDialog();
   }
   
   function drawLandNamePrice(param) {
@@ -870,7 +967,7 @@ $(function() {
     // Shadows
     context.fillStyle = "black";
     context.font = "35px sans-serif";
-    context.fillText(n, 354,132);
+    context.fillText(n, 354, 132);
 
     context.font = "30px sans-serif";
     context.fillText(p, 408, 188);
@@ -878,20 +975,48 @@ $(function() {
     // Text
     context.font = "35px sans-serif";
     context.fillStyle = "white";
-    context.fillText(n, 352,130);
+    context.fillText(n, 352, 130);
 
     context.font = "30px sans-serif";
     context.fillStyle = "red";
     context.fillText(p, 406, 186);      
   }
+
+  function drawNotEnoughCash() {
+    context.font = "35px sans-serif";
+    context.fillStyle = "black";
+    context.fillText("您的現金不足", 322, 147);
+    context.fillStyle = "gold";
+    context.fillText("您的現金不足", 320, 145);
+  }
   
   function buyEmptyLand(block, price) {
     console.log(currentPlayer.name + " bought " + block.c);
     block.owner = currentPlayerIndex;
+    block.bldg = 0;
     currentPlayer.cash -= price;
     soldLands[block.lx].push(block);
   }
   
+  function upgradeBldg(block, price) {
+    console.log(currentPlayer.name + " upgraded " + block.c);
+    ++block.bldg;
+    currentPlayer.cash -= price;
+    bldgLands[block.lx].push(block);
+  }
+  
+  function payRent(rent, owner) {
+    owner.deposit += rent;
+    currentPlayer.cash -= rent;
+    if (currentPlayer.cash < 0) { // If cash is not enough, then get money from deposit
+      currentPlayer.deposit += currentPlayer.cash;
+      currentPlayer.cash = 0;
+      if (currentPlayer.deposit <= 0) { // If no money in deposit either, then bankrupt
+        currentPlayer.alive = false;
+      }
+    }
+  }
+    
   var passbyKeypressed = false;
   var passbyResult = true;
   var passbyDelay = 0;
@@ -914,9 +1039,9 @@ $(function() {
       } else {
         passbyResult = true;
         passbyKeypressed = false;
-        passbyInDelay = false;
         passbyPlayAni = null;
         passbyPlayAniParam = null;
+        passbyInDelay = false;
         passbyDelay = 0;
         cursorPos.x = CursorPositions[0].x;
         cursorPos.y = CursorPositions[0].y;
@@ -924,60 +1049,110 @@ $(function() {
         Game.status = 0;
       }
       return;
-    } 
+    }
     // No need to draw cursor if it's in delay
     drawCursor();
 
     var bid = currentPlayer.gamePos.bid;
     var block = mapInfo[bid];
+    var bldg = block.bldg; // 0: occupied, 1: one house, 2: two houses, 3: grocery store, 
+                           // 4: supermarket, 5: skyscraper
     var owner = block.owner;
-    var city = currentLevel.cityList[block.c];
+    var city = cityList[block.c];
     var name = city.display;
-    var price = city.price;
-    var money = currentPlayer.cash;
+    var cash = currentPlayer.cash;
 
     if (owner != null) { // The block was sold
-      console.log("this place is sold to " + playerList[owner]);
+      //console.log("this place is sold to " + playerList[owner]);
       /*
        *  TODO: - owner
        *         - improvable? 
        *           - Yes
-       *             - enough money?
-       *               - Yes: upgrade
-       *               - No: no ani
+       *             - enough cash?
+       *               - Yes: upgrade > done
+       *               - No: no ani > done
        *           - No
-       *             - No: no ani
+       *             - No: no ani > done
        *        - competitor
        *          - collect total rent of all blocks belonging to the same owner in the same city
        */
+      if (owner == currentPlayerIndex) {
+        var bldg = block.bldg;
+        var cost = city.upgrade;
+        //console.log(bldg + " " + cost);
+        if (bldg == 5 || cost > cash) { // do nothing if not enough cash or the bldg is already skyscraper
+          passbyPlayAni = null;
+          passbyPlayAniParam = null;
+          passbyInDelay = true;
+          return;
+        }
+        passbyPlayAniParam = [BldgUpgradeMsg[bldg], cost];
+        passbyPlayAni = drawUpgradePrice;
+        
+        if (currentPlayer.robot) {
+        // Robots have a simple strategy: just buy every empty block if they have enough cash          
+          upgradeBldg(block, cost);
+          passbyInDelay = true;
+          return;
+        } else {
+          drawYesNoDialog();
+          if (passbyKeypressed) {
+            if (passbyResult) {
+              upgradeBldg(block, cost);
+            }
+            passbyPlayAni = null;
+            passbyPlayAniParam = null;
+            passbyInDelay = true;
+          }
+        }
+      } else { // if (owner != currentPlayerIndex)
+        var rent = 0;
+        var player = playerList[owner];
+        var ownerObj = Players[player];
+        var ownername = ownerObj.name;
+        var blocks = city.blocks;
+        for (var key in blocks) {
+          var blockid = blocks[key];
+          var blk = mapInfo[blockid];
+          if (blk.owner == owner) {
+            rent += city.rent[blk.bldg];
+          }
+        }
+        passbyPlayAniParam = [ownername, rent];
+        passbyPlayAni = drawLandlordRental;
+        payRent(rent, ownerObj);
+        passbyInDelay = true;
+        console.log("total cost " + rent);
+      }
     } else { // Empty block
-      if (money < price) {
-        // TODO: not enough money
-        console.log("not enough money");
-        cursorPos.x = CursorPositions[0].x;
-        cursorPos.y = CursorPositions[0].y;
-        turnToNextPlayer();
-        Game.status = 0;
+      var price = city.price;
+      if (cash < price) {
+        passbyPlayAniParam = null;
+        if (currentPlayer.robot) {
+          passbyPlayAni = null;
+        } else {
+          passbyPlayAni = drawNotEnoughCash;
+        }
+        passbyInDelay = true;
         return;
       }
       passbyPlayAniParam = [name, price];
       passbyPlayAni = drawLandNamePrice;
 
       if (currentPlayer.robot) {
-        // Robots have a simple strategy: just buy every empty block if they have enough money
+        // Robots have a simple strategy: just buy every empty block if they have enough cash
         buyEmptyLand(block, price);
         passbyInDelay = true;
+        return;
       } else {
         drawPurchaseDialog();
         if (passbyKeypressed) {
           if (passbyResult) {
             buyEmptyLand(block, price);
-          } else {
-            console.log(currentPlayer.name + " didnt by " + name);
           }
-          passbyInDelay = true;
           passbyPlayAni = null;
           passbyPlayAniParam = null;
+          passbyInDelay = true;
         }
       }
     }
@@ -1002,9 +1177,38 @@ $(function() {
       break;
     }
   }
+  
+  function ani_passbank() {
+    context.beginPath();
+    context.rect(274, 123, 308, 87);
+    context.fillStyle = '#030B80';
+    context.fill();
+    context.lineWidth = 3;
+    context.strokeStyle = 'gray';
+    context.stroke();  
+
+    context.fillStyle = "black";
+    context.font = "33px sans-serif";  
+    context.fillText("本地屬於", 312, 162);
+    context.fillText(n, 454, 162);
+    context.fillText("付租金", 342, 201);
+    context.fillText(p, 470, 203);
+
+    context.fillStyle = "yellow";
+    context.fillText("本地屬於", 310, 160);
+    context.fillStyle = "blue";
+    context.fillText(n, 452, 160);
+    context.fillText("付租金", 340, 199);
+    context.fillStyle = "orange";
+    context.fillText(p, 468, 201);
+
+    
+    Game.status = 0;
+  }
+  
   var AnimateCallbacks = [ani_default, ani_court, ani_stock, ani_chance, ani_news, ani_tax, 
         ani_casino, ani_park, ani_commuchest, ani_carnival, ani_hospital, ani_jail, ani_bank, 
-        ani_market, ani_road, ani_passby];
+        ani_market, ani_road, ani_passby, ani_passbank];
 
   /**
    * Deity
@@ -1099,6 +1303,10 @@ $(function() {
         if (posx == targetX) {
           gamepos.bid = tgtBid;
           this.path.shift();
+          //if (tgtBlock.t == 12) { // If passing bank
+          //  Game.status = 16; 
+          //  return;
+          //}
         }
         // Already got the destination
         if (this.path.length == 0) {
@@ -1125,44 +1333,11 @@ $(function() {
       posy += deltaY * SpeedDelta;
       position.x = posx;
       position.y = posy;
-//      console.log("after posx " + currentPlayer.position.x + " posy " + currentPlayer.position.y);
-
-      /*
-      var position = currentPlayer.position;
-      var x = position.x;
-      var y = position.y;
-      var bid = this.path[0][0];
-      var dir = this.path[0][1];
-      var block = mapInfo[bid];
-      var tx = block.x * GridLength;
-      var ty = block.y * GridLength;
-      var dx = (tx - x) > 0 ? 1 : ((tx == x) ? 0 : -1);
-      var dy = (ty - y) > 0 ? 1 : ((ty == y) ? 0 : -1);
-      x += dx * SpeedDelta;
-      y += dy * SpeedDelta;
-      currentPlayer.position.x = x;
-      currentPlayer.position.y = y;
-      if (x == tx && y == ty) {
-        this.path.shift();
-        currentPlayer.gamePos.bid = bid;
-        currentPlayer.gamePos.d = dir;
-      }
-      if (this.path.length == 0) {
-        this.isMoving = false;
-        // set cursor position according to what game status is activated
-        var t = block.t;
-        cursorPos.x = CursorPositions[t].x;
-        cursorPos.y = CursorPositions[t].y;
-        console.log("set cursor " + cursorPos.x + " " + cursorPos.y);
-        Game.status = t;
-        return;
-      }
-      */
     },
   }
 
   var keyPressedCallbacks = [kp_default,kp_court, kp_stock, null, null, null, kp_casino, 
-      null, null, kp_carnival, null, null, kp_bank, kp_market, null, kp_passby];
+      null, null, kp_carnival, null, null, kp_bank, kp_market, null, kp_passby, kp_passbank];
       
   var Game = {
     status: 0,
@@ -1185,7 +1360,7 @@ $(function() {
       maxNumOfPlayers = playerList.length;
       currentPlayer = Players[playerList[currentPlayerIndex]];
       currentPlayer.robot = false;
-      
+      cityList = currentLevel.cityList;
       // Bind key intrupt
       $(document).keypress(function(e) {
         keyPressedCallbacks[Game.status](e);
@@ -1201,8 +1376,10 @@ $(function() {
       }
       
       soldLands = new Array();
+      bldgLands = new Array();
       for (var i=0; i<mapSize; ++i) {
         soldLands.push(new Array());
+        bldgLands.push(new Array());
       }
       
       // Walk through mapInfo to multiply each block lx/ly with GridLength
@@ -1212,6 +1389,14 @@ $(function() {
         if (block.lx && block.ly) {
           block.mx = block.lx * GridLength;
           block.my = block.ly * GridLength;
+          /*
+          if (Game.debug) {
+            block.owner = 0;
+            block.bldg = 1;
+            soldLands[block.lx].push(block);
+            bldgLands[block.lx].push(block);
+          }
+          */
         }
       }
     },
