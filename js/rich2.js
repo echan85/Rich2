@@ -26,6 +26,7 @@ var MenuSelectedImg = loadImage("menuselected.png");
 var HeadImg = loadImage("head.png");
 var CarImg = loadImage("car.png");
 var BldgImg = loadImage("bldg.png");
+var AbacusImg = loadImage("abacus.png");
 var BldgUpgradeMsg = [
   "加蓋平房","改建店鋪","擴建商場","蓋商業大樓","建摩天大廈"
 ];
@@ -45,7 +46,8 @@ var CursorPositions = [
   {x: 251, y: 45},
   {x: 251, y: 45},
   {x: 251, y: 45},
-  {x: 508, y: 224}
+  {x: 508, y: 224},
+  {x: 480, y: 159}
 ];
 
 function loadImage(imgURL) {
@@ -84,6 +86,7 @@ $(function() {
   var currentPlayerIndex;
   var maxNumOfPlayers;
   var cityList;
+  var passedBank = false;
 /**
  *           
 
@@ -335,13 +338,13 @@ $(function() {
 
   var Levels = {
     taiwan: {
-      playerList: ["atuzai", "dalaoqian"], // atuzai, dalaoqian, sunxiaomei, diana
+      playerList: ["atuzai", "dalaoqian", "sunxiaomei", "qianfuren"], // atuzai, dalaoqian, sunxiaomei, diana
       mapInfo: {"1":{"x":20,"y":7,"s":0,"t":2,"n":{"3":2}},
       "2":{"x":20,"y":8,"s":1,"t":15,"n":{"3":3},"lx":19,"ly":8,"c":"taoyuan"},
       "3":{"x":20,"y":9,"s":1,"t":15,"n":{"3":4},"lx":19,"ly":9,"c":"taoyuan"},"4":{"x":20,"y":10,"s":1,"t":15,"n":{"3":5},"lx":19,"ly":10,"c":"taoyuan"},"5":{"x":20,"y":11,"s":1,"t":3,"n":{"3":6,"2":97}},"6":{"x":19,"y":12,"s":0,"t":3,"n":{"0":5,"3":7}},"7":{"x":19,"y":13,"s":1,"t":15,"n":{"0":6,"3":8},"lx":20,"ly":13,"c":"xinzhu"},"8":{"x":19,"y":14,"s":1,"t":15,"n":{"0":7,"3":9},"lx":20,"ly":14,"c":"xinzhu"},"9":{"x":19,"y":15,"s":1,"t":15,"n":{"0":8,"3":10},"lx":20,"ly":15,"c":"xinzhu"},"10":{"x":19,"y":16,"s":1,"t":12,"n":{"0":9,"3":11,"1":98,"2":126}},"11":{"x":19,"y":17,"s":0,"t":12,"n":{"0":10,"3":12}},"126":{"x":20,"y":16,"s":0,"t":12,"n":{"1":10,"2":127}},"12":{"x":19,"y":18,"s":1,"t":15,"n":{"0":11,"3":13},"lx":20,"ly":18,"c":"jiayi"},"13":{"x":19,"y":19,"s":1,"t":15,"n":{"0":12,"3":14},"lx":20,"ly":19,"c":"jiayi"},"14":{"x":19,"y":20,"s":1,"t":15,"n":{"0":13,"3":15},"lx":20,"ly":20,"c":"jiayi"},"15":{"x":19,"y":21,"s":0,"t":2,"n":[14,16]},"16":{"x":18,"y":21,"s":1,"t":2,"n":{"3":26,"1":17,"2":15}},"26":{"x":18,"y":22,"s":0,"t":2,"n":{"0":16,"3":27}},"17":{"x":17,"y":21,"s":1,"t":15,"n":{"1":18},"lx":17,"ly":20,"c":"tainan"},"18":{"x":16,"y":21,"s":1,"t":15,"n":{"1":19},"lx":16,"ly":20,"c":"tainan"},"19":{"x":15,"y":21,"s":1,"t":15,"n":{"1":20},"lx":15,"ly":20,"c":"tainan"},"20":{"x":14,"y":21,"s":1,"t":5,"n":{"3":22}},"21":{"x":13,"y":21,"s":0,"t":5,"n":{"2":20}},"22":{"x":14,"y":22,"s":1,"t":6,"n":{"0":20,"2":23}},"23":{"x":15,"y":22,"s":1,"t":15,"n":{"2":24},"lx":15,"ly":23,"c":"tainan"},"24":{"x":16,"y":22,"s":1,"t":15,"n":{"2":25},"lx":16,"ly":23,"c":"tainan"},"25":{"x":17,"y":22,"s":1,"t":15,"n":{"2":26},"lx":17,"ly":23,"c":"tainan"},"27":{"x":18,"y":23,"s":1,"t":15,"n":{"0":26,"3":28},"lx":19,"ly":23,"c":"gaoxiong"},"28":{"x":18,"y":24,"s":1,"t":15,"n":{"0":27,"3":29},"lx":19,"ly":24,"c":"gaoxiong"},"29":{"x":18,"y":25,"s":1,"t":15,"n":{"0":28,"3":30},"lx":19,"ly":25,"c":"gaoxiong"},"30":{"x":18,"y":26,"s":1,"t":15,"n":{"0":29,"3":31},"lx":19,"ly":26,"c":"gaoxiong"},"31":{"x":18,"y":27,"s":0,"t":13,"n":{"0":30,"3":32}},"32":{"x":19,"y":28,"s":1,"t":13,"n":{"0":31,"3":33}},"33":{"x":19,"y":29,"s":1,"t":15,"n":{"0":32,"3":34},"lx":18,"ly":29,"c":"pingdong"},"34":{"x":19,"y":30,"s":1,"t":15,"n":{"0":33,"3":35},"lx":18,"ly":30,"c":"pingdong"},"35":{"x":19,"y":31,"s":1,"t":15,"n":{"0":34,"3":36},"lx":18,"ly":31,"c":"pingdong"},"36":{"x":19,"y":32,"s":1,"t":2,"n":{"0":35,"2":37}},"37":{"x":20,"y":32,"s":0,"t":2,"n":{"1":36,"2":38}},"38":{"x":21,"y":32,"s":0,"t":9,"n":{"1":37,"2":39}},"39":{"x":22,"y":32,"s":1,"t":9,"n":[40,38]},"40":{"x":22,"y":31,"s":1,"t":15,"n":{"0":41,"3":39},"lx":23,"ly":31,"c":"eluanbi"},"41":{"x":22,"y":30,"s":1,"t":15,"n":{"0":42,"3":40},"lx":23,"ly":30,"c":"eluanbi"},"42":{"x":22,"y":29,"s":1,"t":15,"n":{"0":43,"3":41},"lx":23,"ly":29,"c":"eluanbi"},"43":{"x":22,"y":28,"s":0,"t":4,"n":{"3":42,"2":44}},"44":{"x":23,"y":27,"s":1,"t":4,"n":{"1":43,"2":45}},"45":{"x":24,"y":27,"s":1,"t":8,"n":{"1":44,"2":46}},"46":{"x":25,"y":27,"s":0,"t":8,"n":[47,45]},"47":{"x":25,"y":26,"s":1,"t":15,"n":{"0":48,"3":46},"lx":26,"ly":26,"c":"taidong"},"48":{"x":25,"y":25,"s":1,"t":15,"n":{"0":49,"3":47},"lx":26,"ly":25,"c":"taidong"},"49":{"x":25,"y":24,"s":1,"t":15,"n":{"0":50,"3":48},"lx":26,"ly":24,"c":"taidong"},"50":{"x":25,"y":23,"s":1,"t":15,"n":{"0":51,"3":49},"lx":26,"ly":23,"c":"taidong"},"51":{"x":25,"y":22,"s":1,"t":3,"n":{"0":52,"3":50}},"52":{"x":25,"y":21,"s":0,"t":3,"n":{"0":53,"3":51}},"53":{"x":25,"y":20,"s":1,"t":15,"n":{"0":54,"3":52},"lx":26,"ly":20,"c":"hualian"},"54":{"x":25,"y":19,"s":1,"t":15,"n":{"0":55,"3":53},"lx":26,"ly":19,"c":"hualian"},"55":{"x":25,"y":18,"s":1,"t":15,"n":{"0":56,"3":54},"lx":26,"ly":18,"c":"hualian"},"56":{"x":25,"y":17,"s":1,"t":7,"n":{"3":55,"1":130,"2":57}},"130":{"x":24,"y":16,"s":0,"t":7,"n":{"1":129,"2":56}},"57":{"x":26,"y":17,"s":1,"t":15,"n":{"1":56,"2":58},"lx":26,"ly":16,"c":"tailuge"},"58":{"x":27,"y":17,"s":1,"t":15,"n":{"1":57,"2":59},"lx":27,"ly":16,"c":"tailuge"},"59":{"x":28,"y":17,"s":1,"t":15,"n":{"1":58,"2":60},"lx":28,"ly":16,"c":"tailuge"},"60":{"x":29,"y":17,"s":0,"t":2,"n":[61,59]},"61":{"x":30,"y":16,"s":1,"t":2,"n":{"0":62,"3":60}},"62":{"x":30,"y":15,"s":1,"t":15,"n":{"0":63,"3":61},"lx":29,"ly":15,"c":"suao"},"63":{"x":30,"y":14,"s":1,"t":15,"n":{"0":64,"3":62},"lx":29,"ly":14,"c":"suao"},"64":{"x":30,"y":13,"s":1,"t":15,"n":{"0":65,"3":63},"lx":29,"ly":13,"c":"suao"},"65":{"x":30,"y":12,"s":1,"t":15,"n":{"0":66,"3":64},"lx":29,"ly":12,"c":"suao"},"66":{"x":30,"y":11,"s":0,"t":3,"n":{"0":67,"3":65}},"67":{"x":31,"y":10,"s":1,"t":3,"n":{"0":68,"3":66}},"68":{"x":31,"y":9,"s":1,"t":15,"n":{"0":69,"3":67},"lx":30,"ly":9,"c":"yilan"},"69":{"x":31,"y":8,"s":1,"t":15,"n":{"0":70,"3":68},"lx":30,"ly":8,"c":"yilan"},"70":{"x":31,"y":7,"s":1,"t":15,"n":{"0":71,"3":69},"lx":30,"ly":7,"c":"yilan"},"71":{"x":31,"y":6,"s":1,"t":15,"n":{"0":72,"3":70},"lx":30,"ly":6,"c":"yilan"},"72":{"x":31,"y":5,"s":1,"t":6,"n":{"0":73,"3":71}},"73":{"x":31,"y":4,"s":0,"t":6,"n":{"0":74,"3":72}},"74":{"x":31,"y":3,"s":1,"t":2,"n":{"3":73,"1":75}},"75":{"x":30,"y":3,"s":1,"t":15,"n":{"1":76,"2":74},"lx":30,"ly":4,"c":"jilong"},"76":{"x":29,"y":3,"s":1,"t":15,"n":{"1":77,"2":75},"lx":29,"ly":4,"c":"jilong"},"77":{"x":28,"y":3,"s":1,"t":15,"n":{"1":78,"2":76},"lx":28,"ly":4,"c":"jilong"},"78":{"x":27,"y":3,"s":0,"t":8,"n":{"1":79,"2":77}},"79":{"x":26,"y":4,"s":1,"t":8,"n":{"3":80,"2":78}},"80":{"x":26,"y":5,"s":1,"t":7,"n":[79,81]},"81":{"x":25,"y":5,"s":1,"t":15,"n":{"1":82,"2":80},"lx":25,"ly":4,"c":"taipei"},"82":{"x":24,"y":5,"s":1,"t":15,"n":{"1":83,"2":81},"lx":24,"ly":4,"c":"taipei"},"83":{"x":23,"y":5,"s":1,"t":15,"n":{"1":84,"2":82},"lx":23,"ly":4,"c":"taipei"},"84":{"x":22,"y":5,"s":1,"t":15,"n":{"1":85,"2":83},"lx":22,"ly":4,"c":"taipei"},"85":{"x":21,"y":5,"s":1,"t":1,"n":{"3":88,"2":84}},"88":{"x":21,"y":6,"s":1,"t":2,"n":{"3":1,"2":89}},"93":{"x":21,"y":7,"s":0,"t":2,"n":[88]},"94":{"x":21,"y":8,"s":1,"t":15,"n":[93],"lx":22,"ly":8,"c":"taoyuan"},"95":{"x":21,"y":9,"s":1,"t":15,"n":[94],"lx":22,"ly":9,"c":"taoyuan"},"96":{"x":21,"y":10,"s":1,"t":15,"n":[95],"lx":22,"ly":10,"c":"taoyuan"},"97":{"x":21,"y":11,"s":1,"t":4,"n":[96]},"98":{"x":18,"y":16,"s":1,"t":15,"n":{"1":99,"2":10},"lx":18,"ly":15,"c":"taizhong"},"99":{"x":17,"y":16,"s":1,"t":15,"n":{"1":100,"2":98},"lx":17,"ly":15,"c":"taizhong"},"100":{"x":16,"y":16,"s":1,"t":15,"n":{"1":101,"2":99},"lx":16,"ly":15,"c":"taizhong"},"101":{"x":15,"y":16,"s":0,"t":8,"n":{"1":102,"2":100}},"102":{"x":14,"y":16,"s":1,"t":8,"n":{"3":139,"1":103,"2":101}},"139":{"x":14,"y":17,"s":1,"t":15,"n":{"0":102,"3":140},"lx":13,"ly":17,"c":"yunlin"},"140":{"x":14,"y":18,"s":1,"t":15,"n":{"0":139,"3":141},"lx":13,"ly":18,"c":"yunlin"},"141":{"x":14,"y":19,"s":1,"t":15,"n":{"0":140,"3":142},"lx":13,"ly":19,"c":"yunlin"},"142":{"x":14,"y":20,"s":0,"t":5,"n":{"0":141,"3":20}},"103":{"x":13,"y":16,"s":0,"t":14,"n":{"1":104}},"104":{"x":12,"y":16,"s":1,"t":14,"n":{"1":105}},"105":{"x":11,"y":16,"s":1,"t":14,"n":{"1":106}},"106":{"x":10,"y":16,"s":1,"t":14,"n":{"1":107}},"107":{"x":9,"y":16,"s":1,"t":14,"n":{"1":108}},"108":{"x":8,"y":16,"s":1,"t":14,"n":{"1":109}},"109":{"x":7,"y":16,"s":1,"t":14,"n":{"1":110}},"110":{"x":6,"y":16,"s":1,"t":14,"n":{"1":111}},"116":{"x":3,"y":18,"s":1,"t":14,"n":{"2":117}},"117":{"x":4,"y":19,"s":1,"t":14,"n":{"2":118}},"118":{"x":5,"y":20,"s":1,"t":14,"n":{"2":119}},"119":{"x":6,"y":21,"s":1,"t":14,"n":{"2":120}},"120":{"x":7,"y":21,"s":1,"t":14,"n":{"2":121}},"121":{"x":8,"y":21,"s":1,"t":14,"n":{"2":122}},"122":{"x":9,"y":21,"s":1,"t":14,"n":{"2":123}},"123":{"x":10,"y":21,"s":1,"t":14,"n":{"2":124}},"124":{"x":11,"y":21,"s":1,"t":14,"n":{"2":125}},"125":{"x":12,"y":21,"s":0,"t":14,"n":{"2":21}},"111":{"x":5,"y":16,"s":1,"t":15,"n":{"1":112},"lx":5,"ly":15,"c":"penghu"},"112":{"x":4,"y":16,"s":1,"t":15,"n":{"1":113},"lx":4,"ly":15,"c":"penghu"},"113":{"x":3,"y":16,"s":1,"t":15,"n":{"1":114},"lx":3,"ly":15,"c":"penghu"},"114":{"x":2,"y":16,"s":0,"t":8,"n":{"3":115}},"115":{"x":2,"y":17,"s":1,"t":8,"n":{"2":116}},"127":{"x":21,"y":16,"s":1,"t":15,"n":{"1":126,"2":128},"lx":21,"ly":17,"c":"nantou"},"128":{"x":22,"y":16,"s":1,"t":15,"n":{"1":127,"2":129},"lx":22,"ly":17,"c":"nantou"},"129":{"x":23,"y":16,"s":1,"t":15,"n":{"1":128,"2":130},"lx":23,"ly":17,"c":"nantou"},"131":{"x":24,"y":14,"s":0,"t":11,"n":[]},"132":{"x":25,"y":14,"s":0,"t":11,"n":[]},"133":{"x":24,"y":13,"s":0,"t":11,"n":[]},"134":{"x":25,"y":13,"s":0,"t":11,"n":[]},"135":{"x":22,"y":25,"s":0,"t":10,"n":[]},"136":{"x":23,"y":25,"s":0,"t":10,"n":[]},"137":{"x":22,"y":24,"s":0,"t":10,"n":[]},"138":{"x":23,"y":24,"s":0,"t":10,"n":[]},"86":{"x":20,"y":5,"s":1,"t":1,"n":{"3":87}},"87":{"x":20,"y":6,"s":1,"t":2,"n":{"3":1}},"89":{"x":22,"y":6,"s":1,"t":15,"n":{"2":90},"lx":22,"ly":7,"c":"taipei"},"90":{"x":23,"y":6,"s":1,"t":15,"n":{"2":91},"lx":23,"ly":7,"c":"taipei"},"91":{"x":24,"y":6,"s":1,"t":15,"n":{"2":92},"lx":24,"ly":7,"c":"taipei"},"92":{"x":25,"y":6,"s":1,"t":15,"n":{"2":80},"lx":25,"ly":7,"c":"taipei"},"143":{"x":20,"y":4,"s":1,"t":1,"n":{"3":86}}},
       mapImg: loadImage("taiwan.png"),
       mapSize: 36, // There are 36x36 blocks in the map
-      MapLength: 1728,
+      MapLength: 1728, //87
       startPos: [{bid: 1, d: 3}, {bid: 87, d: 3}, {bid: 86, d: 3}, {bid: 143, d: 3}],
       cityList: {
         nantou: {
@@ -993,13 +996,22 @@ $(function() {
   function buyEmptyLand(block, price) {
     console.log(currentPlayer.name + " bought " + block.c);
     block.owner = currentPlayerIndex;
-    block.bldg = 0;
+    if (block.bldg == null) {
+      block.bldg = 0;
+    }
     currentPlayer.cash -= price;
+    currentPlayer.blocks.push(block);
+    if (block.bldg > 0) {
+      ++currentPlayer.building;
+    }
     soldLands[block.lx].push(block);
   }
   
   function upgradeBldg(block, price) {
     console.log(currentPlayer.name + " upgraded " + block.c);
+    if (block.bldg == 0) {
+      ++currentPlayer.building;
+    }
     ++block.bldg;
     currentPlayer.cash -= price;
     bldgLands[block.lx].push(block);
@@ -1034,7 +1046,7 @@ $(function() {
     
     // Clean up
     if (passbyInDelay) {
-      if (passbyDelay < 50) {
+      if (passbyDelay < 75) {
         ++passbyDelay;
       } else {
         passbyResult = true;
@@ -1063,19 +1075,6 @@ $(function() {
     var cash = currentPlayer.cash;
 
     if (owner != null) { // The block was sold
-      //console.log("this place is sold to " + playerList[owner]);
-      /*
-       *  TODO: - owner
-       *         - improvable? 
-       *           - Yes
-       *             - enough cash?
-       *               - Yes: upgrade > done
-       *               - No: no ani > done
-       *           - No
-       *             - No: no ani > done
-       *        - competitor
-       *          - collect total rent of all blocks belonging to the same owner in the same city
-       */
       if (owner == currentPlayerIndex) {
         var bldg = block.bldg;
         var cost = city.upgrade;
@@ -1178,9 +1177,20 @@ $(function() {
     }
   }
   
-  function ani_passbank() {
+  var passbankPlayAni = null;
+  var passbankPlayAniParam = 0;
+  var passbankDialogLevel = 0;
+  function drawBankDialog() {
     context.beginPath();
-    context.rect(274, 123, 308, 87);
+    context.rect(246, 122, 212, 86);
+    context.fillStyle = '#030B80';
+    context.fill();
+    context.lineWidth = 3;
+    context.strokeStyle = 'gray';
+    context.stroke();  
+
+    context.beginPath();
+    context.rect(460, 122, 84, 129);
     context.fillStyle = '#030B80';
     context.fill();
     context.lineWidth = 3;
@@ -1188,21 +1198,217 @@ $(function() {
     context.stroke();  
 
     context.fillStyle = "black";
-    context.font = "33px sans-serif";  
-    context.fillText("本地屬於", 312, 162);
-    context.fillText(n, 454, 162);
-    context.fillText("付租金", 342, 201);
-    context.fillText(p, 470, 203);
+    context.font = "29px sans-serif";  
+    context.fillText("路過銀行", 290, 182);
+    context.fillText("存款", 474, 156);
+    context.fillText("領款", 474, 201);
+    context.fillText("放棄", 474, 244);
 
     context.fillStyle = "yellow";
-    context.fillText("本地屬於", 310, 160);
+    context.fillText("路過銀行", 288, 180);
     context.fillStyle = "blue";
-    context.fillText(n, 452, 160);
-    context.fillText("付租金", 340, 199);
-    context.fillStyle = "orange";
-    context.fillText(p, 468, 201);
-
+    context.fillText("存款", 472, 154);
+    context.fillText("領款", 472, 199);
+    context.fillText("放棄", 472, 242);
+    context.fillStyle = "yellow";
+    if (level0Selection == 0) {
+      context.fillText("存款", 472, 154);      
+    } else if (level0Selection == 1) {
+      context.fillText("領款", 472, 199);    
+    } else {
+      context.fillText("放棄", 472, 242);    
+    }
+  }
+  var passbankDelay = 0;
+  function drawRobotPassbank(param) {
+    var choice = param[0];
+    var transferMoney = param[1];
     
+    context.beginPath();
+    context.rect(223, 247, 340, 86);
+    context.fillStyle = '#030B80';
+    context.fill();
+    context.lineWidth = 3;
+    context.strokeStyle = 'gray';
+    context.stroke();  
+    
+    context.fillStyle = "black";
+    context.font = "33px sans-serif";  
+    context.fillText(ATMDialog[choice], 267, 307);
+    context.fillStyle = "gold";
+    context.fillText(ATMDialog[choice], 265, 305);
+    
+    context.fillStyle = "black";
+    context.font = "33px sans-serif";  
+    context.fillText(transferMoney, 398, 308);
+    context.fillStyle = "gold";
+    context.fillText(transferMoney, 396, 306);
+
+    if (passbankDelay < 50) {
+      ++passbankDelay;
+    } else {
+      passbankDelay = 0;
+      passbankPlayAni = null;
+      Game.status = 0;
+    }
+  }
+  
+  function ani_passbank() {
+    drawMap(currentPlayer.position.x, currentPlayer.position.y);
+    drawPlayer();
+    drawSidebar();
+    drawDice(Players.dice1 - 1, Players.dice2 - 1);
+    
+    if (!currentPlayer.robot) {
+      drawBankDialog();
+    }
+    //console.log("level0Selection " + level0Selection);
+    if (passbankPlayAni) {
+      passbankPlayAni(passbankPlayAniParam);
+      return;
+    }
+    if (currentPlayer.robot) {
+      // Right now robots have a simple strategy, try to make the ratio of cash:deposti = 2:3
+      var c = currentPlayer.cash;
+      var d = currentPlayer.deposit;
+      if (c / d < 0.4) { // not enough cash
+        var delta = Math.floor((c + d) / 5) * 2 - c;
+        currentPlayer.cash += delta;
+        currentPlayer.deposit -= delta;
+        passbankPlayAni = drawRobotPassbank;
+        passbankPlayAniParam = [1, delta];
+      } else if (c / d > 1.5){
+        var delta = Math.floor((c + d) / 5 * 3 - d);
+        currentPlayer.cash -= delta;
+        currentPlayer.deposit += delta;
+        passbankPlayAni = drawRobotPassbank;
+        passbankPlayAniParam = [0, delta];
+      } else {
+        Game.status = 0;
+      }
+      passedBank = true;
+    } else {
+      drawCursor();
+    }
+  }
+  
+  var ATMDialog = ["存入金额 ", "提出金额 "];
+  var transferMoney = 0;
+  var level0Selection = 0;
+  function drawDepositWithdrawDialog(choice) {
+    //console.log("choice " + choice);
+    context.beginPath();
+    context.rect(223, 247, 340, 86);
+    context.fillStyle = '#030B80';
+    context.fill();
+    context.lineWidth = 3;
+    context.strokeStyle = 'gray';
+    context.stroke();  
+    
+    context.fillStyle = "black";
+    context.font = "33px sans-serif";  
+    context.fillText(ATMDialog[choice], 267, 307);
+    context.fillStyle = "gold";
+    context.fillText(ATMDialog[choice], 265, 305);
+    
+    context.drawImage(AbacusImg, 269, 324);
+    context.drawImage(AbacusImg, 246, 0, 20, 50, cursorPos.x - 10, cursorPos.y - 25, 20, 50);
+    
+    var money;
+    if (choice == 0) {
+      money = currentPlayer.cash;
+    } else {
+      money = currentPlayer.deposit;
+    }
+    transferMoney = Math.floor((cursorPos.x - 289) / 200 * money);
+    context.fillStyle = "black";
+    context.font = "33px sans-serif";  
+    context.fillText(transferMoney, 398, 308);
+    context.fillStyle = "gold";
+    context.fillText(transferMoney, 396, 306);
+  }
+  
+  function kp_passbank(e) {
+    var kc = e.keyCode;
+    var entered = false;
+    if (passbankDialogLevel == 0) {
+      switch (kc) {
+      case 38: // up
+        cursorPos.y -= 45;
+        if (cursorPos.y < 159) {
+          cursorPos.y = 159;
+        }
+        break;
+      case 40: // down
+        cursorPos.y += 45;
+        if (cursorPos.y > 249) {
+          cursorPos.y = 249;
+        }
+        break;
+      case 32: // space
+      case 13: // enter
+        entered = true;
+      }
+      level0Selection = cko_passbankLevel0();
+      if (entered) {
+        if (level0Selection < 2) {
+          passbankPlayAniParam = level0Selection;
+          passbankPlayAni = drawDepositWithdrawDialog;
+          passbankDialogLevel = 1;
+          cursorPos.x = 289;
+          cursorPos.y = 349;
+        } else {
+          console.log("quit");
+          cursorPos.x = CursorPositions[0].x;
+          cursorPos.y = CursorPositions[0].y;
+          passbankPlayAni = null;
+          level0Selection = 0;
+          passbankDialogLevel = 0;
+          passedBank = true;
+          Game.status = 0;
+          return;
+        }        
+      }
+    } else {
+      switch (kc) {
+      case 37: // left
+        --cursorPos.x;
+        if (cursorPos.x < 289) {
+          cursorPos.x = 289;
+        }
+        break;
+      case 39: // right
+        ++cursorPos.x;
+        if (cursorPos.x > 489) {
+          cursorPos.x = 489;
+        }
+        break;
+      case 32: // space
+      case 13: // enter
+        cko_passbankLevel1();
+        break;
+      }
+    }
+  }
+  
+  function cko_passbankLevel0() {
+    return Math.floor((cursorPos.y - 159) / 45);
+  }
+  
+  function cko_passbankLevel1() {
+    if (level0Selection == 0) {
+      currentPlayer.cash -= transferMoney;
+      currentPlayer.deposit += transferMoney;
+    } else {
+      currentPlayer.cash += transferMoney;
+      currentPlayer.deposit -= transferMoney;
+    }
+    cursorPos.x = CursorPositions[0].x;
+    cursorPos.y = CursorPositions[0].y;
+    passbankPlayAni = null;
+    level0Selection = 0;
+    passedBank = true;
+    passbankDialogLevel = 0;
     Game.status = 0;
   }
   
@@ -1243,7 +1449,7 @@ $(function() {
       building: 0,
       stock: [],
       cards: [], // maximum: 9
-      land: [],
+      blocks: [],
     },
     dalaoqian: {
       alive: true,
@@ -1259,7 +1465,39 @@ $(function() {
       building: 0,
       stock: [],
       cards: [], // maximum: 9
-      land: [],
+      blocks: [],
+    },
+    sunxiaomei: {
+      alive: true,
+      id: 2, // unique id
+      name: "孫 小 美",
+      robot: true,
+      cash: 25000,
+      deposit: 25000,
+      status: 0,
+      deity: 0,
+      position: {x:0,y:0},
+      gamePos: {bid:0, d:0},
+      building: 0,
+      stock: [],
+      cards: [], // maximum: 9
+      blocks: [],
+    },
+    qianfuren: {
+      alive: true,
+      id: 3, // unique id
+      name: "錢 夫 人",
+      robot: true,
+      cash: 27500,
+      deposit: 27500,
+      status: 0,
+      deity: 0,
+      position: {x:0,y:0},
+      gamePos: {bid:0, d:0},
+      building: 0,
+      stock: [],
+      cards: [], // maximum: 9
+      blocks: [],
     },
 
     path: [],
@@ -1296,17 +1534,22 @@ $(function() {
       var posx = position.x;
       var posy = position.y;
       var gamepos = currentPlayer.gamePos;
-      //console.log(tgtBlock);
-      //console.log("posx " + posx + " posy " + posy + " tgtX " + targetX + " tgtY " + targetY + " dx " + deltaX + " dy " + deltaY);
       if (tgtBlock == null // haven't moved yet
           || posx == targetX && posy == targetY) { // Or reached one block
         if (posx == targetX) {
           gamepos.bid = tgtBid;
           this.path.shift();
-          //if (tgtBlock.t == 12) { // If passing bank
-          //  Game.status = 16; 
-          //  return;
-          //}
+          if (tgtBlock && tgtBlock.t == 12 && tgtBlock.s) {
+            if (!passedBank) { // If passing bank
+              console.log("passing bank");
+              cursorPos.x = CursorPositions[16].x;
+              cursorPos.y = CursorPositions[16].y;
+              Game.status = 16;
+              return;
+            } else {
+              passedBank = false;
+            }
+          }
         }
         // Already got the destination
         if (this.path.length == 0) {
@@ -1327,7 +1570,8 @@ $(function() {
         targetX = tgtBlock.x * GridLength;
         targetY = tgtBlock.y * GridLength;
         deltaX = (targetX - posx) > 0 ? 1 : ((targetX == posx) ? 0 : -1);
-        deltaY = (targetY - posy) > 0 ? 1 : ((targetY == posy) ? 0 : -1);        
+        deltaY = (targetY - posy) > 0 ? 1 : ((targetY == posy) ? 0 : -1);
+        console.log("tgtBid " + tgtBid + " tgtX " + targetX + " tgtY " + targetY);
       }
       posx += deltaX * SpeedDelta;
       posy += deltaY * SpeedDelta;
