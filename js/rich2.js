@@ -603,7 +603,7 @@ $(function() {
   
   function ani_stock() {
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
-    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+    context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
 
     context.font = "43px sans-serif";
     context.fillStyle = "black";
@@ -663,7 +663,7 @@ $(function() {
   function ani_news() {
     console.log("news callback called");
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
-    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+    context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
 
     context.font = "43px sans-serif";
     context.fillStyle = "black";
@@ -686,7 +686,7 @@ $(function() {
   function ani_tax() {
     console.log("tax callback called");
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
-    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+    context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
 
     context.font = "43px sans-serif";
     context.fillStyle = "black";
@@ -709,7 +709,7 @@ $(function() {
   function ani_casino() {
     console.log("casino callback called");
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
-    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+    context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
 
     context.font = "43px sans-serif";
     context.fillStyle = "black";
@@ -736,7 +736,7 @@ $(function() {
   var parkDelay = 0;
   function ani_park() {
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
-    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+    context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
 
     context.font = "43px sans-serif";
     context.fillStyle = "black";
@@ -759,7 +759,7 @@ $(function() {
   function ani_commuchest() {
     console.log("community chest callback called");
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
-    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+    context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
 
     context.font = "43px sans-serif";
     context.fillStyle = "black";
@@ -782,7 +782,7 @@ $(function() {
   function ani_carnival() {
     console.log("carnival callback called");
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
-    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+    context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
 
     context.font = "43px sans-serif";
     context.fillStyle = "black";
@@ -809,7 +809,7 @@ $(function() {
   function ani_hospital() {
     console.log("hospital callback called");
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
-    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+    context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
 
     context.font = "43px sans-serif";
     context.fillStyle = "black";
@@ -832,7 +832,7 @@ $(function() {
   function ani_jail() {
     console.log("jail callback called");
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
-    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+    context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
 
     context.font = "43px sans-serif";
     context.fillStyle = "black";
@@ -857,7 +857,7 @@ $(function() {
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
     drawPlayer();
     drawSidebar();
-    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+    context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
 
     context.font = "43px sans-serif";
     context.fillStyle = "black";
@@ -882,7 +882,7 @@ $(function() {
   function ani_market() {
     console.log("market callback called");
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
-    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+    context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
 
     context.font = "43px sans-serif";
     context.fillStyle = "black";
