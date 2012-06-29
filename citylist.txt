@@ -1,7 +1,7 @@
       cityList: {
         nantou: {
           price: 500, upgrade: 80,
-          rent: [0, 0, 750, 0, 0, 0],
+          rent: [100, 300, 750, 0, 0, 0],
           blocks: [127, 128, 129],
           display: "南投縣"
         },
@@ -61,19 +61,19 @@
         },
         taoyuan: {
           price: 2200, upgrade: 340,
-          rent: [440, 1300, 3200, 6400, 0, 0],
+          rent: [440, 1300, 3200, 6400, 10500, 0],
           blocks: [2, 3, 4, 96, 95, 94],
           display: "桃園縣"
         },
         penghu: {
           price: 600, upgrade: 0,
-          rent: [0, 0, 0, 0, 0, 0],
+          rent: [100, 0, 0, 0, 0, 0],
           blocks: [11, 12, 13],
-          display: "澎湖"
+          display: "澎 湖"
         },
         hualian: {
           price: 1500, upgrade: 180,
-          rent: [300, 900, 0, 0, 0, 0],
+          rent: [300, 900, 2000, 4200, 7000, 0],
           blocks: [53, 54, 55],
           display: "花蓮縣"
         },
@@ -81,10 +81,10 @@
           price: 800, upgrade: 100,
           rent: [150, 500, 1100, 2200, 0, 0],
           blocks: [62, 63, 64, 65],
-          display: "蘇澳"
+          display: "蘇 澳"
         },
         yunlin: {
-          price: 1600, upgrade: 0,
+          price: 1600, upgrade: 200,
           rent: [300, 0, 0, 0, 0, 0],
           blocks: [139, 140, 141],
           display: "雲林縣"
