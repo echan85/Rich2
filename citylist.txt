@@ -1,7 +1,7 @@
       cityList: {
         nantou: {
           price: 500, upgrade: 80,
-          rent: [100, 300, 750, 0, 0, 0],
+          rent: [100, 300, 750, 1500, 0, 0],
           blocks: [127, 128, 129],
           display: "南投縣"
         },
@@ -13,7 +13,7 @@
         },
         taizhong: {
           price: 1400, upgrade: 200,
-          rent: [250, 0, 0, 0, 0, 0],
+          rent: [250, 800, 0, 0, 0, 0],
           blocks: [98, 99, 100],
           display: "台中市"
         },
@@ -25,13 +25,13 @@
         },
         tainan: {
           price: 2000, upgrade: 250,
-          rent: [400, 1200, 0, 0, 0, 0],
+          rent: [400, 1200, 3000, 8800, 0, 0],
           blocks: [17, 18, 19, 23, 24, 25],
           display: "台南市"
         },
         jilong: {
           price: 2000, upgrade: 300,
-          rent: [400, 1200, 3000, 6000, 0, 0],
+          rent: [400, 1200, 3000, 6000, 0, 16000],
           blocks: [75, 76, 77],
           display: "基隆市"
         },
@@ -43,13 +43,13 @@
         },
         yilan: {
           price: 1200, upgrade: 160,
-          rent: [230, 700, 1600, 3000, 0, 8000],
+          rent: [230, 700, 1600, 3000, 5000, 8000],
           blocks: [68, 69, 70, 71],
           display: "宜蘭縣"
         },
         pingdong: {
           price: 1400, upgrade: 200, 
-          rent: [250, 800, 2000, 0, 0, 0],
+          rent: [250, 800, 2000, 4000, 7000, 0],
           blocks: [33, 34, 35],
           display: "屏東縣"
         },
@@ -66,8 +66,8 @@
           display: "桃園縣"
         },
         penghu: {
-          price: 600, upgrade: 0,
-          rent: [100, 0, 0, 0, 0, 0],
+          price: 600, upgrade: 100,
+          rent: [100, 300, 0, 0, 0, 0],
           blocks: [11, 12, 13],
           display: "澎 湖"
         },
@@ -85,13 +85,13 @@
         },
         yunlin: {
           price: 1600, upgrade: 200,
-          rent: [300, 0, 0, 0, 0, 0],
+          rent: [300, 900, 0, 0, 0, 0],
           blocks: [139, 140, 141],
           display: "雲林縣"
         },
         gaoxiong: {
           price: 2300, upgrade: 360,
-          rent: [450, 1300, 0, 0, 0, 0],
+          rent: [450, 1300, 4000, 6000, 0, 0],
           blocks: [27, 28, 29, 30],
           display: "高雄市"
         },
@@ -103,7 +103,7 @@
         },
         jiayi: {
           price: 1500, upgrade: 180,
-          rent: [300, 900, 0, 0, 0, 7000],
+          rent: [300, 900, 2000, 0, 0, 7000],
           blocks: [12, 13, 14],
           display: "嘉義市"
         }
