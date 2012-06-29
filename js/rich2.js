@@ -4,6 +4,7 @@ var CanvasHeight = 480;
 var GridLength = 48; // The width of each block in game
 var MapViewLength = 432; // The partial map that player can see, the length is 9x48=432 px
 var MapViewHalfLength = 192;
+var MapImgLength = 216;
 var MenuOptionHeight = 48;
 var MenuOptionWidth = 86;
 var SideBarWidth = 208; // Left side bar
@@ -17,6 +18,11 @@ var DiceWidth = 54;
 var DiceHeight = 72;
 var mapOffsetX = 0;
 var mapOffsetY = 0;
+var ChanceImgWidth = 176;
+var ChanceImgHeight = 146;
+var ChanceDisplayWidth = 352;
+var ChanceDisplayHeight = 291;
+var NumOfChances = 19;
 var CoverImg = loadImage("topcoverlay.png");
 var CursorImg = loadImage("mouse.png");
 var DiceImg = loadImage("dice.png");
@@ -27,6 +33,7 @@ var HeadImg = loadImage("head.png");
 var CarImg = loadImage("car.png");
 var BldgImg = loadImage("bldg.png");
 var AbacusImg = loadImage("abacus.png");
+var ChanceImg = loadImage("chance.png");
 var BldgUpgradeMsg = [
   "加蓋平房","改建店鋪","擴建商場","蓋商業大樓","建摩天大廈"
 ];
@@ -98,10 +105,7 @@ $(function() {
   var maxNumOfPlayers;
   var cityList;
   var passedBank = false;
-/**
- *           
 
- */
   function drawMap(cx, cy) {
     var llx = cx - MapViewHalfLength;
     var rrx = currentLevel.MapLength - (cx + GridLength) - MapViewHalfLength;
@@ -230,11 +234,6 @@ $(function() {
   } 
   
   function turnToNextPlayer() {
-    // First check if current player is bankrupt
-    if (!currentPlayer.alive) {
-      // TODO: bankrupt ani
-      console.log(currentPlayer.name + " is bankrupt!");
-    }
     do {
       currentPlayerIndex = (currentPlayerIndex + 1) % maxNumOfPlayers;
       currentPlayer = Players[playerList[currentPlayerIndex]];
@@ -352,6 +351,17 @@ $(function() {
     }
   ]    
   ];
+
+  function checkPlayerCashFlow(player) {
+    if (player.cash < 0) {
+      player.deposit += player.cash;
+      player.cash = 0;
+      if (player.deposit <= 0) {
+        player.alive = false;
+        console.log(player.name + " is bankrupt");
+      }
+    }
+  }
 
   var Levels = {
     taiwan: {
@@ -617,24 +627,34 @@ $(function() {
     console.log("stock key pressed called");
   }
   
+  var chanceDelay = 0;
+  var chanceImgX, chanceImgY;
   function ani_chance() {
-    console.log("chance callback called");
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
-    context.drawImage(LandLabelImg, 0, 0, 180, 75, 292, 86, 180, 75);
+    context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
 
     context.font = "43px sans-serif";
     context.fillStyle = "black";
-    context.fillText("運   氣", 322, 142);
+    context.fillText("運  氣", 322, 142);
 
     context.fillStyle = "yellow";
-    context.fillText("運   氣", 320, 140);
+    context.fillText("運  氣", 320, 140);
 
     drawPlayer();
     drawSidebar();
-    if (parkDelay < 50) {
-      ++parkDelay;
+    if (chanceDelay < 150) {
+      ++chanceDelay;
+      if (chanceDelay == 50) {
+        var pick = Math.floor(Math.random() * NumOfChances);
+        chanceImgX = Math.floor(pick % 4) * ChanceImgWidth;
+        chanceImgY = Math.floor(pick / 4) * ChanceImgHeight;
+        Chances[pick]();
+      } else if (chanceDelay > 50) {
+        context.drawImage(ChanceImg, chanceImgX, chanceImgY, ChanceImgWidth, ChanceImgHeight, 
+          281, 186, ChanceDisplayWidth, ChanceDisplayHeight);
+      }
     } else {
-      parkDelay = 0;
+      chanceDelay = 0;
       turnToNextPlayer();
       Game.status = 0;
     }
@@ -841,10 +861,10 @@ $(function() {
 
     context.font = "43px sans-serif";
     context.fillStyle = "black";
-    context.fillText("路過銀行", 322, 142);
+    context.fillText("銀 行", 322, 142);
 
     context.fillStyle = "yellow";
-    context.fillText("路過銀行", 320, 140);
+    context.fillText("銀 行", 320, 140);
 
     if (parkDelay < 50) {
       ++parkDelay;
@@ -988,7 +1008,7 @@ $(function() {
     context.fillStyle = "black";
     context.font = "35px sans-serif";
     context.fillText(n, 354, 132);
-
+    context.fillText("地價", 334, 194);
     context.font = "30px sans-serif";
     context.fillText(p, 408, 188);
 
@@ -996,6 +1016,7 @@ $(function() {
     context.font = "35px sans-serif";
     context.fillStyle = "white";
     context.fillText(n, 352, 130);
+    context.fillText("地價", 332, 192);
 
     context.font = "30px sans-serif";
     context.fillStyle = "red";
@@ -1037,13 +1058,7 @@ $(function() {
   function payRent(rent, owner) {
     owner.deposit += rent;
     currentPlayer.cash -= rent;
-    if (currentPlayer.cash < 0) { // If cash is not enough, then get money from deposit
-      currentPlayer.deposit += currentPlayer.cash;
-      currentPlayer.cash = 0;
-      if (currentPlayer.deposit <= 0) { // If no money in deposit either, then bankrupt
-        currentPlayer.alive = false;
-      }
-    }
+    checkPlayerCashFlow(currentPlayer);
   }
     
   var passbyKeypressed = false;
@@ -1433,6 +1448,125 @@ $(function() {
         ani_casino, ani_park, ani_commuchest, ani_carnival, ani_hospital, ani_jail, ani_bank, 
         ani_market, ani_road, ani_passby, ani_passbank];
 
+  var Chances = [
+    // 0: 内线交易获利30%
+    function() {
+      currentPlayer.cash = Math.floor(currentPlayer.cash * 1.3);
+    },
+    // 1: 举报走私得奖金二千元
+    function() {
+      currentPlayer.cash += 2000;
+    },
+    // 2: 现金被强盗抢走一半
+    function() {
+      currentPlayer.cash = Math.floor(currentPlayer.cash * 0.5);
+    },
+    // 3: 发票中奖得600元
+    function() {
+      currentPlayer.cash += 600;
+    },
+    // 4: 打工赚得一千元
+    function() {
+      currentPlayer.cash += 1000;
+    },
+    // 5: 路边拣到500元
+    function() {
+      currentPlayer.cash += 500;
+    },
+    // 6: 摆地摊赚得二千元
+    function() {
+      currentPlayer.cash += 2000;
+    },
+    // 7: 放高利贷获利40％
+    function() {
+      currentPlayer.cash = Math.floor(currentPlayer.cash * 1.4);
+    },
+    // 8: 现金被歹徒骗了20%
+    function() {
+      currentPlayer.cash = Math.floor(currentPlayer.cash * 0.8);
+    },
+    // 9: 现金投资获利20％
+    function() {
+      currentPlayer.cash = Math.floor(currentPlayer.cash * 1.2);
+    },
+    // 10: 交通违规罚三千元
+    function() {
+      currentPlayer.cash -= 3000;
+      checkPlayerCashFlow(currentPlayer);
+    },
+    // 11: 制造噪音罚款600元
+    function() {
+      currentPlayer.cash -= 600;
+      checkPlayerCashFlow(currentPlayer);
+    },
+    // 12: 打破玻璃赔一千元
+    function() {
+      currentPlayer.cash -= 1000;
+      checkPlayerCashFlow(currentPlayer);
+    },
+    // 13: 向所有人收一千元红包
+    function() {
+      var money = 0;
+      for (var key in playerList) {
+        var name = playerList[key];
+        if (Players[name].alive) {
+          Players[name].cash -= 1000;
+          money += 1000;
+          checkPlayerCashFlow(Players[name]);
+        }
+      }
+      currentPlayer.cash += money;
+    },
+    // 14: 漏税罚款二千元
+    function() {
+      currentPlayer.cash -= 2000;
+      checkPlayerCashFlow(currentPlayer);
+    },
+    // 15: 赞助爱心捐款500元
+    function() {
+      currentPlayer.cash -= 500;
+      checkPlayerCashFlow(currentPlayer);
+    },
+    // 16: 送每人一千元吃红
+    function() {
+      var money = 0;
+      for (var key in playerList) {
+        var name = playerList[name];
+        if (Players[name].alive) {
+          Players[name].cash += 1000;
+          money += 1000;
+        }
+      }
+      currentPlayer.cash -= money;
+      checkPlayerCashFlow(currentPlayer);
+    },
+    // 17: 遗失500元
+    function() {
+      currentPlayer.cash -= 500;
+      checkPlayerCashFlow(currentPlayer);
+    },
+    // 18: 妨碍风化坐牢七天
+    function() {
+      
+    },
+    // 跌入水沟住院三天
+    function() {
+      
+    },
+    // 
+    function() {
+      
+    },
+    //
+    function() {
+      
+    },
+    //
+    function() {
+      
+    }
+  ];
+
   /**
    * Deity
    * 0: none
@@ -1516,7 +1650,6 @@ $(function() {
       cards: [], // maximum: 9
       blocks: [],
     },
-
     path: [],
     isMoving: false, // use this boolean to block keyboard interupts
     dice1: 0,
