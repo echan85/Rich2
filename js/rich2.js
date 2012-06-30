@@ -1761,7 +1761,7 @@ $(function() {
       currentPlayer.robot = false;
       cityList = currentLevel.cityList;
       // Bind key intrupt
-      $(document).keypress(function(e) {
+      $(document).keydown(function(e) {
         keyPressedCallbacks[Game.status](e);
       });
       
