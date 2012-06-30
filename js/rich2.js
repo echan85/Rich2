@@ -632,17 +632,15 @@ $(function() {
   var chanceImgX, chanceImgY;
   function ani_chance() {
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
+    drawPlayer();
+    drawSidebar();
     context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
-
     context.font = "43px sans-serif";
     context.fillStyle = "black";
     context.fillText("運  氣", 322, 142);
-
     context.fillStyle = "yellow";
     context.fillText("運  氣", 320, 140);
 
-    drawPlayer();
-    drawSidebar();
     if (chanceDelay < 150) {
       ++chanceDelay;
       if (chanceDelay == 50) {
@@ -821,13 +819,13 @@ $(function() {
 
     drawPlayer();
     drawSidebar();
-    if (commuchestDelay < 150) {
+    if (commuchestDelay < 100) {
       ++commuchestDelay;
-      if (commuchestDelay == 50) {
+      if (commuchestDelay == 30) {
         var pick = Math.floor(Math.random() * NumOfCards);
         commuchestCard = Cards[pick].name;
         currentPlayer.cards.push(pick);
-      } else if (commuchestDelay > 50) {
+      } else if (commuchestDelay > 30) {
         drawCard(commuchestCard);
       }
     } else {
@@ -836,25 +834,6 @@ $(function() {
       Game.status = 0;
     }
   }
-  
-  /**
-   * if (chanceDelay < 150) {
-      ++chanceDelay;
-      if (chanceDelay == 50) {
-        var pick = Math.floor(Math.random() * NumOfChances);
-        chanceImgX = Math.floor(pick % 4) * ChanceImgWidth;
-        chanceImgY = Math.floor(pick / 4) * ChanceImgHeight;
-        Chances[pick]();
-      } else if (chanceDelay > 50) {
-        context.drawImage(ChanceImg, chanceImgX, chanceImgY, ChanceImgWidth, ChanceImgHeight, 
-          281, 186, ChanceDisplayWidth, ChanceDisplayHeight);
-      }
-    } else {
-      chanceDelay = 0;
-      turnToNextPlayer();
-      Game.status = 0;
-    }
-   */
   
   function ani_carnival() {
     console.log("carnival callback called");
@@ -1041,9 +1020,28 @@ $(function() {
 
   }
   
+  var lrDelay = 0;
   function drawLandlordRental(param) {
-    var n = param[0];
-    var p = param[1];
+    if (lrDelay < 30) { // Blinking effect
+      ++lrDelay;
+      if (Math.floor(lrDelay / 10) % 2) {
+        return;
+      }
+      var list = param.list;
+      for (var key in list) {
+        var block = list[key];
+        var x = SideBarWidth + block.mx - mapOffsetX;
+        var y = MenuOptionHeight + block.my - mapOffsetY;
+        context.beginPath();
+        context.rect(x, y, GridLength, GridLength);
+        context.fillStyle = "rgba(0, 0, 0, 0.3)";
+        context.fill();
+      }
+      return;
+    }
+    
+    var n = param.name;
+    var p = param.price;
     context.beginPath();
     context.rect(274, 123, 308, 87);
     context.fillStyle = '#030B80';
@@ -1157,7 +1155,7 @@ $(function() {
     
     // Clean up
     if (passbyInDelay) {
-      if (passbyDelay < 75) {
+      if (passbyDelay < 90) {
         ++passbyDelay;
       } else {
         passbyResult = true;
@@ -1221,17 +1219,20 @@ $(function() {
         var ownerObj = Players[player];
         var ownername = ownerObj.name;
         var blocks = city.blocks;
+        var blist = [];
         for (var key in blocks) {
           var blockid = blocks[key];
           var blk = mapInfo[blockid];
           if (blk.owner == owner) {
             rent += city.rent[blk.bldg];
+            blist.push(blk);
           }
         }
-        passbyPlayAniParam = [ownername, rent];
+        passbyPlayAniParam = {name: ownername, price: rent, list: blist};
         passbyPlayAni = drawLandlordRental;
         payRent(rent, ownerObj);
         passbyInDelay = true;
+        lrDelay = 0;
         console.log("total cost " + rent);
       }
     } else { // Empty block
@@ -2087,14 +2088,14 @@ $(function() {
         if (block.lx && block.ly) {
           block.mx = block.lx * GridLength;
           block.my = block.ly * GridLength;
-          /*
+          
           if (Game.debug) {
-            block.owner = 0;
-            block.bldg = 1;
+            block.owner = 1;
+            block.bldg = 0;
             soldLands[block.lx].push(block);
-            bldgLands[block.lx].push(block);
+            //bldgLands[block.lx].push(block);
           }
-          */
+          
         }
       }
     },
