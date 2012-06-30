@@ -2088,14 +2088,14 @@ $(function() {
         if (block.lx && block.ly) {
           block.mx = block.lx * GridLength;
           block.my = block.ly * GridLength;
-          
+          /*
           if (Game.debug) {
             block.owner = 1;
             block.bldg = 0;
             soldLands[block.lx].push(block);
             //bldgLands[block.lx].push(block);
           }
-          
+          */
         }
       }
     },
