@@ -23,6 +23,7 @@ var ChanceImgHeight = 146;
 var ChanceDisplayWidth = 352;
 var ChanceDisplayHeight = 291;
 var NumOfChances = 19;
+var NumOfCards = 36;
 var CoverImg = loadImage("topoverlays.png");
 var CursorImg = loadImage("mouse.png");
 var DiceImg = loadImage("dice.png");
@@ -660,47 +661,77 @@ $(function() {
     }
   }
 
+  var newsDelay = 0;
   function ani_news() {
     console.log("news callback called");
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
-    context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
+    drawPlayer();
+    drawSidebar();
 
+    context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
     context.font = "43px sans-serif";
     context.fillStyle = "black";
     context.fillText("新   聞", 322, 142);
-
     context.fillStyle = "yellow";
     context.fillText("新   聞", 320, 140);
 
-    drawPlayer();
-    drawSidebar();
-    if (parkDelay < 50) {
-      ++parkDelay;
+    if (newsDelay < 50) {
+      ++newsDelay;
     } else {
-      parkDelay = 0;
+      newsDelay = 0;
       turnToNextPlayer();
       Game.status = 0;
     }
   }
 
-  function ani_tax() {
-    console.log("tax callback called");
-    drawMap(currentPlayer.position.x, currentPlayer.position.y);
-    context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
-
-    context.font = "43px sans-serif";
+  var taxDelay = 0;
+  var taxMount, taxTitle;
+  function drawTax(price) {
+    context.beginPath();
+    context.rect(240, 220, 340, 130);
+    context.fillStyle = '#030B80';
+    context.fill();
+    context.lineWidth = 3;
+    context.strokeStyle = 'gray';
+    context.stroke();  
+    
     context.fillStyle = "black";
-    context.fillText("交   税", 322, 142);
+    context.font = "33px sans-serif";  
+    context.fillText(taxTitle, 283, 278);
+    context.fillText("=   " + taxMount, 427, 319);
 
     context.fillStyle = "yellow";
-    context.fillText("交   税", 320, 140);
+    context.fillText(taxTitle, 281, 276);
+    context.fillText("=   " + taxMount, 425, 317);
+  }
 
+  function ani_tax() {
+    drawMap(currentPlayer.position.x, currentPlayer.position.y);
     drawPlayer();
     drawSidebar();
-    if (parkDelay < 50) {
-      ++parkDelay;
+    context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
+    context.font = "43px sans-serif";
+    context.fillStyle = "black";
+    context.fillText("稅捐處", 322, 142);
+    context.fillStyle = "yellow";
+    context.fillText("稅捐處", 320, 140);
+    
+    if (taxDelay == 0) {
+      if (Math.floor(Math.random() * 2) == 0) { // Cash tax
+        taxMount = Math.floor(currentPlayer.cash * 0.1);
+        taxTitle = "抽現金稅百分之十";
+      } else { // property tax (real estate)
+        taxMount = Math.floor(currentPlayer.realestate * 0.05);
+        taxTitle = "交土地稅百分之五";
+      }
+      currentPlayer.cash -= taxMount;
+      checkPlayerCashFlow(currentPlayer);
+    }
+    if (taxDelay < 100) {
+      ++taxDelay;
+      drawTax();
     } else {
-      parkDelay = 0;
+      taxDelay = 0;
       turnToNextPlayer();
       Game.status = 0;
     }
@@ -736,17 +767,15 @@ $(function() {
   var parkDelay = 0;
   function ani_park() {
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
-    context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
-
-    context.font = "43px sans-serif";
-    context.fillStyle = "black";
-    context.fillText("公   園", 322, 142);
-
-    context.fillStyle = "yellow";
-    context.fillText("公   園", 320, 140);
-
     drawPlayer();
     drawSidebar();
+    context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
+    context.font = "43px sans-serif";
+    context.fillStyle = "black";
+    context.fillText("公  園", 322, 142);
+    context.fillStyle = "yellow";
+    context.fillText("公  園", 320, 140);
+
     if (parkDelay < 50) {
       ++parkDelay;
     } else {
@@ -756,6 +785,28 @@ $(function() {
     }
   }
   
+  var commuchestDelay = 0;
+  var commuchestCard;
+  
+  function drawCard(name) {
+    context.beginPath();
+    context.rect(258, 193, 340, 87);
+    context.fillStyle = '#030B80';
+    context.fill();
+    context.lineWidth = 3;
+    context.strokeStyle = 'gray';
+    context.stroke();  
+    
+    context.fillStyle = "black";
+    context.font = "33px sans-serif";  
+    context.fillText("免費獲得", 302, 252);
+    context.fillText(name, 446, 253);
+
+    context.fillStyle = "yellow";
+    context.fillText("免費獲得", 300, 250);
+    context.fillText(name, 444, 251);
+  }
+  
   function ani_commuchest() {
     console.log("community chest callback called");
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
@@ -763,21 +814,47 @@ $(function() {
 
     context.font = "43px sans-serif";
     context.fillStyle = "black";
-    context.fillText("卡   片", 322, 142);
+    context.fillText("卡  片", 322, 142);
 
     context.fillStyle = "yellow";
-    context.fillText("卡   片", 320, 140);
+    context.fillText("卡  片", 320, 140);
 
     drawPlayer();
     drawSidebar();
-    if (parkDelay < 50) {
-      ++parkDelay;
+    if (commuchestDelay < 150) {
+      ++commuchestDelay;
+      if (commuchestDelay == 50) {
+        var pick = Math.floor(Math.random() * NumOfCards);
+        commuchestCard = Cards[pick].name;
+        currentPlayer.cards.push(pick);
+      } else if (commuchestDelay > 50) {
+        drawCard(commuchestCard);
+      }
     } else {
-      parkDelay = 0;
+      commuchestDelay = 0;
       turnToNextPlayer();
       Game.status = 0;
     }
   }
+  
+  /**
+   * if (chanceDelay < 150) {
+      ++chanceDelay;
+      if (chanceDelay == 50) {
+        var pick = Math.floor(Math.random() * NumOfChances);
+        chanceImgX = Math.floor(pick % 4) * ChanceImgWidth;
+        chanceImgY = Math.floor(pick / 4) * ChanceImgHeight;
+        Chances[pick]();
+      } else if (chanceDelay > 50) {
+        context.drawImage(ChanceImg, chanceImgX, chanceImgY, ChanceImgWidth, ChanceImgHeight, 
+          281, 186, ChanceDisplayWidth, ChanceDisplayHeight);
+      }
+    } else {
+      chanceDelay = 0;
+      turnToNextPlayer();
+      Game.status = 0;
+    }
+   */
   
   function ani_carnival() {
     console.log("carnival callback called");
@@ -1038,6 +1115,7 @@ $(function() {
       block.bldg = 0;
     }
     currentPlayer.cash -= price;
+    currentPlayer.realestate += price;
     currentPlayer.blocks.push(block);
     if (block.bldg > 0) {
       ++currentPlayer.building;
@@ -1052,6 +1130,7 @@ $(function() {
     }
     ++block.bldg;
     currentPlayer.cash -= price;
+    currentPlayer.realestate += price;
     bldgLands[block.lx].push(block);
   }
   
@@ -1448,6 +1527,225 @@ $(function() {
         ani_casino, ani_park, ani_commuchest, ani_carnival, ani_hospital, ani_jail, ani_bank, 
         ani_market, ani_road, ani_passby, ani_passbank];
 
+  var Cards = [
+    // 0: 魔王卡：整街夷为平地
+    {
+      price: 0,
+      name: "魔王卡",
+      act: function() {}
+    },
+    // 1: 怪兽卡：破坏整栋大厦
+    {
+      price: 0,
+      name: "怪獸卡",
+      act: function() {}
+    },
+    // 2: 拆屋卡：拆除一层房屋
+    {
+      price: 0,
+      name: "拆屋卡",
+      act: function() {}
+    },
+    // 3: 路障卡：设置路障阻挡所有人前进
+    {
+      price: 0,
+      name: "路障卡",
+      act: function() {}
+    },
+    // 4: 地雷卡：放地雷炸弹害人
+    {
+      price: 0,
+      name: "地雷卡",
+      act: function() {}
+    },
+    // 5: 仙女卡：阻止大灾难发生
+    {
+      price: 0,
+      name: "仙女卡",
+      act: function() {}
+    },
+    // 6: 除障卡：拆除路障或地雷
+    {
+      price: 0,
+      name: "除障卡",
+      act: function() {}
+    },
+    // 7: 陷害卡：使对手坐牢五天
+    {
+      price: 0,
+      name: "陷害卡",
+      act: function() {}
+    },
+    // 8: 查封令：查封对手得房地产五天
+    {
+      price: 0,
+      name: "查封令",
+      act: function() {}
+    },
+    // 9: 冻结令：冻结对手的资金五天
+    {
+      price: 0,
+      name: "凍結令",
+      act: function() {}
+    },
+    // 10: 复仇卡：被陷害时可反击对方
+    {
+      price: 0,
+      name: "復仇卡",
+      act: function() {}
+    },
+    // 11: 嫁祸卡：被陷害时可转嫁给别人
+    {
+      price: 0,
+      name: "嫁禍卡",
+      act: function() {}
+    },
+    // 12: 免费卡：抵消2000元以上租金
+    {
+      price: 0,
+      name: "免費卡",
+      act: function() {}
+    },
+    // 13: 免狱令：抵消牢狱之灾一次
+    {
+      price: 0,
+      name: "免獄令",
+      act: function() {}
+    },
+    // 14: 免罪卡：抵消查封或冻结之灾
+    {
+      price: 0,
+      name: "免罪卡",
+      act: function() {}
+    },
+    // 15: 免税卡：免缴税金一次
+    {
+      price: 0,
+      name: "免稅卡",
+      act: function() {}
+    },
+    // 16: 均富卡：所有人现金重新平分
+    {
+      price: 0,
+      name: "均富卡",
+      act: function() {}
+    },
+    // 17: 购地卡：强制收购别人的土地
+     {
+      price: 0,
+      name: "購地卡",
+      act: function() {}
+    },
+    // 18: 售地卡：拍卖自己的土地一处
+     {
+      price: 0,
+      name: "售地卡",
+      act: function() {}
+    },
+    // 19: 换地卡：以自己的地换别人的地
+     {
+      price: 0,
+      name: "換地卡",
+      act: function() {}
+    },
+    // 20: 预约卡：预约一块空地
+     {
+      price: 0,
+      name: "預約卡",
+      act: function() {}
+    },
+    // 21: 冬眠符：使全部的对手睡眠五天
+     {
+      price: 0,
+      name: "冬眠符",
+      act: function() {}
+    },
+    // 22: 催眠符：使对手睡眠五天
+     {
+      price: 0,
+      name: "催眠符",
+      act: function() {}
+    },
+    // 23: 送神符：送走俯身的神明
+     {
+      price: 0,
+      name: "送神符",
+      act: function() {}
+    },
+    // 24: 请神符：请来最靠近的神明附身
+     {
+      price: 0,
+      name: "請神符",
+      act: function() {}
+    },
+    // 25: 金卡：持有的股票免费增加50％
+     {
+      price: 0,
+      name: "金卡",
+      act: function() {}
+    },
+    // 26: 银卡：持有股票免费增加30％
+     {
+      price: 0,
+      name: "银卡",
+      act: function() {}
+    },
+    // 27: 红卡：使股市全免大涨长红
+     {
+      price: 0,
+      name: "红卡",
+      act: function() {}
+    },
+    // 28: 黑卡：使股市全免大跌长黑
+     {
+      price: 0,
+      name: "黑卡",
+      act: function() {}
+    },
+    // 29: 抢夺卡：夺取一张卡片或1000元
+     {
+      price: 0,
+      name: "搶奪卡",
+      act: function() {}
+    },
+    // 30: 赌神牌：赌技必胜的宝物
+     {
+      price: 0,
+      name: "賭神牌",
+      act: function() {}
+    },
+    // 31: 赌圣牌：赌场中有预知能力
+     {
+      price: 0,
+      name: "賭聖牌",
+      act: function() {}
+    },
+    // 32: 友谊卡：降低对手的敌意
+     {
+      price: 0,
+      name: "友誼卡",
+      act: function() {}
+    },
+    // 33: 停留卡：使对手前进步数为零
+     {
+      price: 0,
+      name: "停留卡",
+      act: function() {}
+    },
+    // 34: 保险卡：遭遇损失时领补偿金
+     {
+      price: 0,
+      name: "保險卡",
+      act: function() {}
+    },
+    // 35: 疑问卡：不一定发生什么事情
+     {
+      price: 0,
+      name: "疑問卡",
+      act: function() {}
+    },
+  ];
+
   var Chances = [
     // 0: 内线交易获利30%
     function() {
@@ -1772,6 +2070,7 @@ $(function() {
         var bid = Players[playerindex].gamePos.bid;
         Players[playerindex].position.x = mapInfo[bid].x * GridLength;        
         Players[playerindex].position.y = mapInfo[bid].y * GridLength;
+        Players[playerindex].realestate = 0;
       }
       
       soldLands = new Array();
