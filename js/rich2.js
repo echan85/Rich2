@@ -23,7 +23,7 @@ var ChanceImgHeight = 146;
 var ChanceDisplayWidth = 352;
 var ChanceDisplayHeight = 291;
 var NumOfChances = 19;
-var CoverImg = loadImage("topcoverlay.png");
+var CoverImg = loadImage("topoverlays.png");
 var CursorImg = loadImage("mouse.png");
 var DiceImg = loadImage("dice.png");
 var LandLabelImg = loadImage("landlabel.png");
@@ -125,7 +125,7 @@ $(function() {
     } else {
       mapOffsetY = currentLevel.MapLength - MapViewLength;
     }
-    context.drawImage(mapImg, mapOffsetX, mapOffsetY, MapViewLength, MapViewLength, 
+    context.drawImage(mapImg, mapOffsetX/2, mapOffsetY/2, MapViewLength/2, MapViewLength/2, 
         SideBarWidth, MenuOptionHeight, MapViewLength, MapViewLength);
     
     // Find which bought lands need to be displayed
@@ -180,7 +180,7 @@ $(function() {
   }
   
   function drawSidebar() {
-    context.drawImage(CoverImg, 0, 0);
+    context.drawImage(CoverImg, 0, 0, 320, 240, 0, 0, 640, 480);
     // Date
     context.font = "30px sans-serif";
     context.fillStyle = "black";
@@ -247,7 +247,7 @@ $(function() {
   [
     {
       drawSelected: function() {
-        context.drawImage(MenuSelectedImg, 0, 0, MenuOptionWidth, MenuOptionHeight, 
+        context.drawImage(MenuSelectedImg, 0, 0, 43, 24, 
           SideBarWidth, 0, MenuOptionWidth, MenuOptionHeight);
       },
       x: SideBarWidth,
@@ -260,7 +260,7 @@ $(function() {
     },
     {
       drawSelected: function() {
-        context.drawImage(MenuSelectedImg, MenuOptionWidth, 0, MenuOptionWidth, MenuOptionHeight, 
+        context.drawImage(MenuSelectedImg, 43, 0, 43, 24, 
           SideBarWidth + MenuOptionWidth, 0, MenuOptionWidth, MenuOptionHeight);        
       },
       x: SideBarWidth + MenuOptionWidth,
@@ -273,7 +273,7 @@ $(function() {
     },
     {
       drawSelected: function() {
-        context.drawImage(MenuSelectedImg, MenuOptionWidth * 2, 0, MenuOptionWidth, MenuOptionHeight, 
+        context.drawImage(MenuSelectedImg, 86, 0, 43, 24, 
           SideBarWidth + MenuOptionWidth * 2, 0, MenuOptionWidth, MenuOptionHeight);
       },
       x: SideBarWidth + MenuOptionWidth * 2,
@@ -286,7 +286,7 @@ $(function() {
     },
     {
       drawSelected: function() {
-        context.drawImage(MenuSelectedImg, MenuOptionWidth * 3, 0, MenuOptionWidth, MenuOptionHeight, 
+        context.drawImage(MenuSelectedImg, 129, 0, 43, 24, 
           SideBarWidth + MenuOptionWidth * 3, 0, MenuOptionWidth, MenuOptionHeight);
       },
       x: SideBarWidth + MenuOptionWidth * 3,
@@ -299,7 +299,7 @@ $(function() {
     },
     {
       drawSelected: function() {
-        context.drawImage(MenuSelectedImg, MenuOptionWidth * 4, 0, MenuOptionWidth, MenuOptionHeight, 
+        context.drawImage(MenuSelectedImg, 172, 0, 43, 24, 
           SideBarWidth + MenuOptionWidth * 4, 0, MenuOptionWidth, MenuOptionHeight);        
       },
       x: SideBarWidth + MenuOptionWidth * 4,
@@ -1531,7 +1531,7 @@ $(function() {
     function() {
       var money = 0;
       for (var key in playerList) {
-        var name = playerList[name];
+        var name = playerList[key];
         if (Players[name].alive) {
           Players[name].cash += 1000;
           money += 1000;
