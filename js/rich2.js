@@ -22,7 +22,7 @@ var ChanceImgWidth = 176;
 var ChanceImgHeight = 146;
 var ChanceDisplayWidth = 352;
 var ChanceDisplayHeight = 291;
-var NumOfChances = 19;
+var NumOfChances = 20;
 var NumOfCards = 36;
 var CoverImg = loadImage("topoverlays.png");
 var CursorImg = loadImage("mouse.png");
@@ -38,6 +38,7 @@ var ChanceImg = loadImage("chance.png");
 var BldgUpgradeMsg = [
   "加蓋平房","改建店鋪","擴建商場","蓋商業大樓","建摩天大廈"
 ];
+var AnchorImg = loadImage("anchor.png");
 
 var bag1Audio = new Audio("audio/bag1.ogg");
 var bag2Audio = new Audio("audio/bag2.ogg");
@@ -106,6 +107,7 @@ $(function() {
   var maxNumOfPlayers;
   var cityList;
   var passedBank = false;
+  var monthlyScreenImg = null;
 
   function drawMap(cx, cy) {
     var llx = cx - MapViewHalfLength;
@@ -186,7 +188,7 @@ $(function() {
     context.font = "30px sans-serif";
     context.fillStyle = "black";
     context.fillText(Game.year, 75, 48);
-    context.fillText(Game.month + "   " + Game.date, 83, 98);
+    context.fillText(Game.month + "   " + Game.day, 83, 98);
     // Name
     context.font = "45px sans-serif";
     context.fillStyle = 'gold';
@@ -234,13 +236,57 @@ $(function() {
     context.drawImage(DiceImg, 54 * d2, 0, 54, 72, 119, 336, 54, 72);
   } 
   
+  function screenSnapshot() {
+    monthlyScreenImg = context.getImageData(0, 0, CanvasWidth, CanvasHeight)
+    for (var i=0; i<monthlyScreenImg.height; ++i) {
+      for (var j=0; j<monthlyScreenImg.width; ++j) {
+        var index = (i * 4) * monthlyScreenImg.width + (j * 4);
+        var red = monthlyScreenImg.data[index];
+        var green = monthlyScreenImg.data[index + 1];
+        var blue = monthlyScreenImg.data[index + 2];
+        var alpha = monthlyScreenImg.data[index + 3];
+        var average = (red + green + blue) / 3;
+        monthlyScreenImg.data[index] = average;
+        monthlyScreenImg.data[index + 1] = average;
+        monthlyScreenImg.data[index + 2] = average;
+        monthlyScreenImg.data[index + 3] = alpha;
+      }
+    }
+    console.log("snapshot taken");
+  }
+  
   function turnToNextPlayer() {
+    var report = false;
     do {
-      currentPlayerIndex = (currentPlayerIndex + 1) % maxNumOfPlayers;
+      ++currentPlayerIndex;
+      if (currentPlayerIndex == maxNumOfPlayers) {
+        currentPlayerIndex = 0;
+        ++Game.day;
+        if (Game.day > Game.Months[Game.month]) {
+          report = true;
+          Game.day = 1;
+          ++Game.month;
+          if (Game.month > 12) {
+            ++Game.year;
+            if (Game.year % 100 == 0 && Game.year % 400 == 0 || Game.year % 100 != 0 && Game.year % 4 == 0) {
+              Game.Months = GameDate.Prime;
+            } else {
+              Game.Months = GameDate.Months;
+            }
+          }
+        }
+      }
       currentPlayer = Players[playerList[currentPlayerIndex]];
     } while (!currentPlayer.alive);
     console.log("turn to next player " + currentPlayer.name);
     defaultEntered = false;
+    if (report) {
+      console.log("Monthly report");
+      screenSnapshot();
+      Game.status = 17;
+    } else {
+      Game.status = 0;
+    }
   }
   
   var OverObjects = [
@@ -505,6 +551,7 @@ $(function() {
    14: Road
    15: Road with land
    16: Passing Bank
+   17: Monthly Report
   */
   var defaultEntered = false;
   function ani_default() {
@@ -594,7 +641,6 @@ $(function() {
   function ani_court() {
     console.log("court callback called");
     turnToNextPlayer();
-    Game.status = 0;
   }
   var obj_court = new Array();
   
@@ -604,23 +650,19 @@ $(function() {
   
   function ani_stock() {
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
-    context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
-
-    context.font = "43px sans-serif";
-    context.fillStyle = "black";
-    context.fillText("股   市", 322, 142);
-
-    context.fillStyle = "yellow";
-    context.fillText("股   市", 320, 140);
-
     drawPlayer();
     drawSidebar();
+    context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
+    context.font = "43px sans-serif";
+    context.fillStyle = "black";
+    context.fillText("股  市", 322, 142);
+    context.fillStyle = "yellow";
+    context.fillText("股  市", 320, 140);
     if (parkDelay < 50) {
       ++parkDelay;
     } else {
       parkDelay = 0;
       turnToNextPlayer();
-      Game.status = 0;
     }
   }
   
@@ -630,6 +672,7 @@ $(function() {
   
   var chanceDelay = 0;
   var chanceImgX, chanceImgY;
+  var chancePick;
   function ani_chance() {
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
     drawPlayer();
@@ -644,18 +687,19 @@ $(function() {
     if (chanceDelay < 150) {
       ++chanceDelay;
       if (chanceDelay == 50) {
-        var pick = Math.floor(Math.random() * NumOfChances);
-        chanceImgX = Math.floor(pick % 4) * ChanceImgWidth;
-        chanceImgY = Math.floor(pick / 4) * ChanceImgHeight;
-        Chances[pick]();
+        chancePick = Math.floor(Math.random() * NumOfChances);
+        chanceImgX = Math.floor(chancePick % 4) * ChanceImgWidth;
+        chanceImgY = Math.floor(chancePick / 4) * ChanceImgHeight;
       } else if (chanceDelay > 50) {
         context.drawImage(ChanceImg, chanceImgX, chanceImgY, ChanceImgWidth, ChanceImgHeight, 
           281, 186, ChanceDisplayWidth, ChanceDisplayHeight);
+        if (chanceDelay == 100) {
+          Chances[chancePick]();
+        }
       }
     } else {
       chanceDelay = 0;
       turnToNextPlayer();
-      Game.status = 0;
     }
   }
 
@@ -678,7 +722,6 @@ $(function() {
     } else {
       newsDelay = 0;
       turnToNextPlayer();
-      Game.status = 0;
     }
   }
 
@@ -731,30 +774,26 @@ $(function() {
     } else {
       taxDelay = 0;
       turnToNextPlayer();
-      Game.status = 0;
     }
   }
 
   function ani_casino() {
     console.log("casino callback called");
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
+    drawPlayer();
+    drawSidebar();
     context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
-
     context.font = "43px sans-serif";
     context.fillStyle = "black";
     context.fillText("賭   場", 322, 142);
-
     context.fillStyle = "yellow";
     context.fillText("賭   場", 320, 140);
-
-    drawPlayer();
-    drawSidebar();
+    
     if (parkDelay < 50) {
       ++parkDelay;
     } else {
       parkDelay = 0;
       turnToNextPlayer();
-      Game.status = 0;
     }
   }
   
@@ -779,7 +818,6 @@ $(function() {
     } else {
       parkDelay = 0;
       turnToNextPlayer();
-      Game.status = 0;
     }
   }
   
@@ -831,7 +869,6 @@ $(function() {
     } else {
       commuchestDelay = 0;
       turnToNextPlayer();
-      Game.status = 0;
     }
   }
   
@@ -842,10 +879,10 @@ $(function() {
 
     context.font = "43px sans-serif";
     context.fillStyle = "black";
-    context.fillText("游 乐 场", 322, 142);
+    context.fillText("遊樂場", 322, 142);
 
     context.fillStyle = "yellow";
-    context.fillText("游 乐 场", 320, 140);
+    context.fillText("遊樂場", 320, 140);
 
     drawPlayer();
     drawSidebar();
@@ -854,7 +891,6 @@ $(function() {
     } else {
       parkDelay = 0;
       turnToNextPlayer();
-      Game.status = 0;
     }
   }
   
@@ -881,7 +917,6 @@ $(function() {
     } else {
       parkDelay = 0;
       turnToNextPlayer();
-      Game.status = 0;
     }
   }
   
@@ -904,7 +939,6 @@ $(function() {
     } else {
       parkDelay = 0;
       turnToNextPlayer();
-      Game.status = 0;
     }
   }
 
@@ -917,17 +951,16 @@ $(function() {
 
     context.font = "43px sans-serif";
     context.fillStyle = "black";
-    context.fillText("銀 行", 322, 142);
+    context.fillText("銀  行", 322, 142);
 
     context.fillStyle = "yellow";
-    context.fillText("銀 行", 320, 140);
+    context.fillText("銀  行", 320, 140);
 
     if (parkDelay < 50) {
       ++parkDelay;
     } else {
       parkDelay = 0;
       turnToNextPlayer();
-      Game.status = 0;
     }
   }
   
@@ -954,7 +987,6 @@ $(function() {
     } else {
       parkDelay = 0;
       turnToNextPlayer();
-      Game.status = 0;
     }
   }
 
@@ -972,7 +1004,6 @@ $(function() {
     } else {
       parkDelay = 0;
       turnToNextPlayer();
-      Game.status = 0;
     }
   }
   
@@ -1167,7 +1198,6 @@ $(function() {
         cursorPos.x = CursorPositions[0].x;
         cursorPos.y = CursorPositions[0].y;
         turnToNextPlayer();
-        Game.status = 0;
       }
       return;
     }
@@ -1524,9 +1554,48 @@ $(function() {
     Game.status = 0;
   }
   
+  var monthlyDelay = 0;
+  var Greetings = ["您好！", "又到了每月結算的日子", "大富翁銀行依每人存款", "支付百分之十的利息"];
+  var Summary = ["希望您還要再加油哦", "加油哦！不要再墊底哦！"];
+  var monthlyArray;
+  function ani_monthly() {
+    context.putImageData(monthlyScreenImg, 0, 0);
+    context.drawImage(AnchorImg, 370, 0);
+    ++monthlyDelay;
+    context.fillStyle = "yellow";
+    context.font = "36px sans-serif";  
+    if (monthlyDelay < 300) {
+      var k = monthlyDelay / 75;
+      for (var i=0; i<=k; ++i) {
+        context.fillText(Greetings[i], 16, 130 + i * 50);
+      }
+    } else if (monthlyDelay < 500) {
+      if (monthlyDelay == 300) {
+        monthlyArray = [];
+        for (var i=0; i<maxNumOfPlayers; ++i) {
+          var p = Players[playerList[i]];
+          if (p.alive) {
+            var name = p.name;
+            var reward = Math.floor(p.deposit * 0.1);
+            p.deposit += reward;
+            monthlyArray.push({name:name, reward:reward});
+          }
+        }        
+      }
+      for (var i=0; i<monthlyArray.length; ++i) {
+        context.fillText(monthlyArray[i].name + " " + monthlyArray[i].reward, 16, 268 + i * 65);
+      }
+    } else if (monthlyDelay < 600) {
+      context.fillText(Summary[0], 16, 130);
+    } else {
+      monthlyDelay = 0;
+      Game.status = 0;
+    }
+  }
+  
   var AnimateCallbacks = [ani_default, ani_court, ani_stock, ani_chance, ani_news, ani_tax, 
         ani_casino, ani_park, ani_commuchest, ani_carnival, ani_hospital, ani_jail, ani_bank, 
-        ani_market, ani_road, ani_passby, ani_passbank];
+        ani_market, ani_road, ani_passby, ani_passbank, ani_monthly];
 
   var Cards = [
     // 0: 魔王卡：整街夷为平地
@@ -2036,15 +2105,19 @@ $(function() {
 
   var keyPressedCallbacks = [kp_default,kp_court, kp_stock, null, null, null, kp_casino, 
       null, null, kp_carnival, null, null, kp_bank, kp_market, null, kp_passby, kp_passbank];
-      
+  
+  var GameDate = {
+    Months: [null,31,28,31,30,31,30,31,31,30,31,30,31],
+    Prime: [null,31,29,31,30,31,30,31,31,30,31,30,31]
+  }
+  
   var Game = {
     status: 0,
     debug: true,
-    Months: [31,28,31,30,31,30,31,31,30,31,30,31],
-    PrimeMonths: [31,29,31,30,31,30,31,31,30,31,30,31],
+    Months: GameDate.Months,
     year: 1993,
     month: 1,
-    date: 1,
+    day: 1,
     AnimateLoop: null,
     load: function() {
       // Initailize level and first player
@@ -2108,6 +2181,7 @@ $(function() {
   function animate() {
     context.clearRect(0, 0, CanvasWidth, CanvasHeight);
     AnimateCallbacks[Game.status]();
+    
   }
   
   Game.load();
