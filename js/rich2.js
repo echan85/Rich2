@@ -35,6 +35,7 @@ var CarImg = loadImage("car.png");
 var BldgImg = loadImage("bldg.png");
 var AbacusImg = loadImage("abacus.png");
 var ChanceImg = loadImage("chance.png");
+var WinImg = loadImage("winning.png"); // Including dollar background image
 var BldgUpgradeMsg = [
   "加蓋平房","改建店鋪","擴建商場","蓋商業大樓","建摩天大廈"
 ];
@@ -212,7 +213,7 @@ $(function() {
       if (mapInfo[player.gamePos.bid].t != 14) { // If player is not in the sea
         context.drawImage(CarImg, dir * 52, 0, 52, 52, x, y, 52, 52);
       }
-      context.drawImage(HeadImg, i * 168 + dir * 42, 0, 42, 42, x, y - HeadOffset, 42, 42); // 168 = 42 * 4
+      context.drawImage(HeadImg, player.id * 168 + dir * 42, 0, 42, 42, x, y - HeadOffset, 42, 42); // 168 = 42 * 4
     }
     var d = currentPlayer.gamePos.d;
     var pos = currentPlayer.position;
@@ -223,7 +224,7 @@ $(function() {
       return;
     }
     context.drawImage(CarImg, d * 52, 0, 52, 52, cx, cy, 52, 52);
-    context.drawImage(HeadImg, currentPlayerIndex * 168 + d * 42, 0, 42, 42,
+    context.drawImage(HeadImg, currentPlayer.id * 168 + d * 42, 0, 42, 42,
        cx, cy - HeadOffset, 42, 42); // 168 = 42 * 4
   }
 
@@ -1051,11 +1052,9 @@ $(function() {
 
   }
   
-  var lrDelay = 0;
   function drawLandlordRental(param) {
-    if (lrDelay < 30) { // Blinking effect
-      ++lrDelay;
-      if (Math.floor(lrDelay / 10) % 2) {
+    if (passbyDelay < 30) { // Blinking effect
+      if (Math.floor(passbyDelay / 10) % 2) {
         return;
       }
       var list = param.list;
@@ -1186,7 +1185,7 @@ $(function() {
     
     // Clean up
     if (passbyInDelay) {
-      if (passbyDelay < 90) {
+      if (passbyDelay < 70) {
         ++passbyDelay;
       } else {
         passbyResult = true;
@@ -1262,7 +1261,6 @@ $(function() {
         passbyPlayAni = drawLandlordRental;
         payRent(rent, ownerObj);
         passbyInDelay = true;
-        lrDelay = 0;
         console.log("total cost " + rent);
       }
     } else { // Empty block
@@ -1558,18 +1556,20 @@ $(function() {
   var Greetings = ["您好！", "又到了每月結算的日子", "大富翁銀行依每人存款", "支付百分之十的利息"];
   var Summary = ["希望您還要再加油哦", "加油哦！不要再墊底哦！"];
   var monthlyArray;
+  var monthlyRank;
+  var monthlyWinner;
   function ani_monthly() {
     context.putImageData(monthlyScreenImg, 0, 0);
     context.drawImage(AnchorImg, 370, 0);
     ++monthlyDelay;
-    context.fillStyle = "yellow";
+    context.fillStyle = "gold";
     context.font = "36px sans-serif";  
     if (monthlyDelay < 300) {
       var k = monthlyDelay / 75;
       for (var i=0; i<=k; ++i) {
         context.fillText(Greetings[i], 16, 130 + i * 50);
       }
-    } else if (monthlyDelay < 500) {
+    } else if (monthlyDelay < 450) {
       if (monthlyDelay == 300) {
         monthlyArray = [];
         for (var i=0; i<maxNumOfPlayers; ++i) {
@@ -1583,10 +1583,44 @@ $(function() {
         }        
       }
       for (var i=0; i<monthlyArray.length; ++i) {
-        context.fillText(monthlyArray[i].name + " " + monthlyArray[i].reward, 16, 268 + i * 65);
+        context.fillText(monthlyArray[i].name + "   " + monthlyArray[i].reward, 16, 268 + i * 55);
       }
     } else if (monthlyDelay < 600) {
       context.fillText(Summary[0], 16, 130);
+    } else if (monthlyDelay < 750) {
+      if (monthlyDelay == 600) {
+        monthlyRank = [];
+        for (var role in playerList) {
+          var name = playerList[role];
+          var player = Players[name];
+          if (!player.alive) continue;
+          var tot = player.cash + player.deposit + player.realestate + player.stocktot;
+          monthlyRank.push({value: tot, player: player});
+        }
+        for (var i=0; i<monthlyRank.length; ++i) {          
+          for (var j=i+1; j<monthlyRank.length; ++j) {
+            if (monthlyRank[i].value < monthlyRank[j].value) {
+              var tmp = monthlyRank[i];
+              monthlyRank[i] = monthlyRank[j];
+              monthlyRank[j] = tmp;
+            }
+          }
+        }
+        monthlyWinner = monthlyRank[0].player.id + 1;
+        console.log(monthlyRank);
+      }
+      context.drawImage(WinImg, 0, 0, 320, 240, 0, 0, CanvasWidth, CanvasHeight);
+      for (var i=0; i<monthlyRank.length; ++i) {
+        var player = monthlyRank[i].player;
+        var height = Math.floor(monthlyRank[i].value / 1000); // Scale down
+        context.beginPath();
+        context.rect(112 + i * 120, 380 - height, 34, height);
+        context.fillStyle = 'yellow';
+        context.fill();
+        context.drawImage(HeadImg, player.id * 168 + 126, 0, 42, 42, 112 + i * 120, 330 - height, 42, 42);
+      }
+    } else if (monthlyDelay < 900) {
+      context.drawImage(WinImg, monthlyWinner * 320, 0, 320, 240, 0, 0, CanvasWidth, CanvasHeight);
     } else {
       monthlyDelay = 0;
       Game.status = 0;
@@ -1958,65 +1992,29 @@ $(function() {
       alive: true,
       id: 0, // unique id
       name: "阿 土 仔",
-      robot: false,
       cash: 25000,
       deposit: 25000,
-      status: 0,
-      deity: 0,
-      position: {x:0,y:0},
-      gamePos: {bid:0, d:0}, // 0: up, 1: left, 2: right, 3: down
-      building: 0,
-      stock: [],
-      cards: [], // maximum: 9
-      blocks: [],
     },
     dalaoqian: {
       alive: true,
       id: 1, // unique id
       name: "大 老 千",
-      robot: true,
       cash: 30000,
       deposit: 30000,
-      status: 0,
-      deity: 0,
-      position: {x:0,y:0},
-      gamePos: {bid:0, d:0},
-      building: 0,
-      stock: [],
-      cards: [], // maximum: 9
-      blocks: [],
     },
     sunxiaomei: {
       alive: true,
       id: 2, // unique id
       name: "孫 小 美",
-      robot: true,
       cash: 25000,
       deposit: 25000,
-      status: 0,
-      deity: 0,
-      position: {x:0,y:0},
-      gamePos: {bid:0, d:0},
-      building: 0,
-      stock: [],
-      cards: [], // maximum: 9
-      blocks: [],
     },
     qianfuren: {
       alive: true,
       id: 3, // unique id
       name: "錢 夫 人",
-      robot: true,
       cash: 27500,
       deposit: 27500,
-      status: 0,
-      deity: 0,
-      position: {x:0,y:0},
-      gamePos: {bid:0, d:0},
-      building: 0,
-      stock: [],
-      cards: [], // maximum: 9
-      blocks: [],
     },
     path: [],
     isMoving: false, // use this boolean to block keyboard interupts
@@ -2107,7 +2105,7 @@ $(function() {
       null, null, kp_carnival, null, null, kp_bank, kp_market, null, kp_passby, kp_passbank];
   
   var GameDate = {
-    Months: [null,31,28,31,30,31,30,31,31,30,31,30,31],
+    Months: [null,1,28,31,30,31,30,31,31,30,31,30,31],
     Prime: [null,31,29,31,30,31,30,31,31,30,31,30,31]
   }
   
@@ -2127,6 +2125,26 @@ $(function() {
       mapInfo = currentLevel.mapInfo;
       mapImg = currentLevel.mapImg;
       playerList = currentLevel.playerList;
+      // Initialize players' positions/directions in Game and Map coordinations
+      for (var i=0; i<playerList.length; ++i) {
+        var playerindex = playerList[i];
+        Players[playerindex].gamePos = currentLevel.startPos[i]; // 0: up, 1: left, 2: right, 3: down
+        var player = Players[playerindex];
+        var bid = player.gamePos.bid;
+        player.position = {x:0, y:0};
+        player.position.x = mapInfo[bid].x * GridLength;        
+        player.position.y = mapInfo[bid].y * GridLength;
+        player.realestate = 0;
+        player.stocktot = 0;
+        player.building = 0;
+        player.status = 0;
+        player.deity = 0;
+        player.robot = true;
+        player.stock = [];
+        player.cards = []; // maximum: 9
+        player.blocks = [];
+      }
+
       currentPlayerIndex = 0;
       maxNumOfPlayers = playerList.length;
       currentPlayer = Players[playerList[currentPlayerIndex]];
@@ -2135,17 +2153,7 @@ $(function() {
       // Bind key intrupt
       $(document).keydown(function(e) {
         keyPressedCallbacks[Game.status](e);
-      });
-      
-      // Initialize players' positions/directions in Game and Map coordinations
-      for (var i=0; i<playerList.length; ++i) {
-        var playerindex = playerList[i];
-        Players[playerindex].gamePos = currentLevel.startPos[i];
-        var bid = Players[playerindex].gamePos.bid;
-        Players[playerindex].position.x = mapInfo[bid].x * GridLength;        
-        Players[playerindex].position.y = mapInfo[bid].y * GridLength;
-        Players[playerindex].realestate = 0;
-      }
+      });      
       
       soldLands = new Array();
       bldgLands = new Array();
@@ -2161,14 +2169,14 @@ $(function() {
         if (block.lx && block.ly) {
           block.mx = block.lx * GridLength;
           block.my = block.ly * GridLength;
-          /*
+          
           if (Game.debug) {
             block.owner = 1;
             block.bldg = 0;
             soldLands[block.lx].push(block);
             //bldgLands[block.lx].push(block);
           }
-          */
+          
         }
       }
     },
