@@ -35,6 +35,9 @@ var CarImg = loadImage("car.png");
 var BldgImg = loadImage("bldg.png");
 var AbacusImg = loadImage("abacus.png");
 var ChanceImg = loadImage("chance.png");
+var CasinoImg = loadImage("casino.png");
+var CoinImg = loadImage("coin.png");
+var BubbleImg = loadImage("bubble.png");
 var WinImg = loadImage("winning.png"); // Including dollar background image
 var BldgUpgradeMsg = [
   "加蓋平房","改建店鋪","擴建商場","蓋商業大樓","建摩天大廈"
@@ -50,25 +53,25 @@ bag2Audio.addEventListener('ended', function() {
   bag1Audio.play();
 });
 bag1Audio.play();
-
 var CursorPositions = [
-  {x: 251, y: 45},
-  {x: 251, y: 45},
-  {x: 251, y: 45},
-  {x: 251, y: 45},
-  {x: 251, y: 45},
-  {x: 251, y: 45},
-  {x: 251, y: 45},
-  {x: 251, y: 45},
-  {x: 251, y: 45},
-  {x: 251, y: 45},
-  {x: 251, y: 45},
-  {x: 251, y: 45},
-  {x: 251, y: 45},
-  {x: 251, y: 45},
-  {x: 251, y: 45},
-  {x: 508, y: 224},
-  {x: 480, y: 159}
+  {x: 251, y: 45}, // default
+  {x: 251, y: 45}, // Court
+  {x: 251, y: 45}, // Stock
+  {x: 251, y: 45}, // Chance
+  {x: 251, y: 45}, // News
+  {x: 251, y: 45}, // Tax
+  {x: 200, y: 354}, // Casino
+  {x: 251, y: 45}, // Park
+  {x: 251, y: 45}, // CommunityChest
+  {x: 251, y: 45}, // Carnival
+  {x: 251, y: 45}, // Hospital
+  {x: 251, y: 45}, // Jail
+  {x: 251, y: 45}, // Bank
+  {x: 251, y: 45}, // Market
+  {x: 251, y: 45}, // Road
+  {x: 508, y: 224}, // Road with land
+  {x: 480, y: 159}, // Passing Bank
+  {x: 251, y: 45} // Monthly Report
 ];
 
 function loadImage(imgURL) {
@@ -778,28 +781,363 @@ $(function() {
     }
   }
 
-  function ani_casino() {
-    console.log("casino callback called");
+  var CasinoMatrix = [
+    [4, 111, 222, 333, 444, 555, 666, 11],
+    [5, 8,   's', 's', 'b', 'b', 15,  12],
+    [6, 9,   's', 's', 'b', 'b', 16,  13],
+    [7, 10,  's', 's', 'b', 'b', 17,  14]
+  ];
+  var CasinoRMatrix = {
+    4: [0, 0], 111: [1, 0], 222: [2, 0], 333: [3, 0], 444: [4, 0], 555: [5, 0], 666: [6, 0], 11: [7, 0],
+    5: [0, 1], 8: [1, 1],                                                       15: [6, 1], 12: [7, 1], 
+    6: [0, 2], 9: [1, 2],    /* SMALL */                   /* BIG */            16: [6, 2], 13: [7, 2],
+    7: [0, 3], 10: [1, 3],                                                      17: [6, 3], 14: [7, 3]
+  };
+  
+  var casinoDelay = 0;
+  var casinoResult;
+  var casinoStatus = 0; // 0: bet, 1: wait, 2: quit
+  var numOfCoins = 1;
+  var casinoOverSquare = 's';
+  var coinsPos = [];
+  var casinoDice = [];
+  function drawCoins() {
+    if (casinoStatus == 1) {
+      for (var i=0; i<coinsPos.length; ++i) {
+        context.drawImage(CoinImg, 0, 0, 31, 34, coinsPos[i].x, coinsPos[i].y, 62, 68);
+      }
+    } else if (casinoStatus == 0) {
+      context.drawImage(CoinImg, 0, 0, 31, 31, cursorPos.x - 31, cursorPos.y - 34, 62, 68);
+    }
+  }
+  
+  function drawCasinoDice(d1, d2, d3) {
+    context.drawImage(DiceImg, 54 * d1, 0, 54, 72, 124, 10, 54, 72);
+    context.drawImage(DiceImg, 54 * d2, 0, 54, 72, 56, 10, 54, 72);
+    context.drawImage(DiceImg, 54 * d3, 0, 54, 72, 80, 46, 54, 72);
+  }
+  
+  function drawCasinoBet() {
+    var width = 80;
+    var height = 84;
+    var ix, iy
+    if (casinoOverSquare == 's') {  // Intent
+      width = 160;
+      height = 252;
+      ix = 160;
+      iy = 228;
+    } else if (casinoOverSquare == 'b') {
+      width = 160;
+      height = 252;
+      ix = 320;
+      iy = 228;
+    } else {
+      ix = CasinoRMatrix[casinoOverSquare][0] * 80;
+      iy = CasinoRMatrix[casinoOverSquare][1] * 84 + 144;
+    }
+    context.beginPath();
+    context.rect(ix, iy, width, height);
+    context.fillStyle = "rgba(27, 192, 242, 0.6)";
+    context.fill();
+    drawCoins();
+    drawCasinoDice(dice() + 1, dice() + 1, dice() + 1);
+    drawCursor();
+  }
+    
+  function drawCasinoResult() {
+      // Draw hit blocks
+      var sx = 160;
+      var sy = 228;
+      if (casinoResult > 10) { // Big
+        sx = 320;
+        sy = 228;
+      }
+      // Small/Big
+      context.beginPath();
+      context.rect(sx, sy, 160, 249);
+      context.fillStyle = "rgba(242, 48, 27, 0.6)";
+      context.fill();
+      // Exact
+      context.beginPath();
+      context.rect(CasinoRMatrix[casinoResult][0] * 80, CasinoRMatrix[casinoResult][1] * 84 + 144, 80, 84);
+      context.fillStyle = "rgba(242, 48, 27, 0.6)";
+      context.fill();
+      drawCasinoDice(casinoDice[0], casinoDice[1], casinoDice[2]);
+      drawCoins();
+      drawCursor();
+  }
+    
+  function drawCasinoDialog() {
+    context.font = "35px sans-serif";
+    context.fillStyle = "orange";
+    context.fillText(numOfCoins * 1000, 200, 342);
+    context.fillStyle = "yellow";
+    context.fillText("贏了還要再繼續嗎", 200, 446);
+    context.font = "25px sans-serif";
+    if (cursorPos.y == 425) {
+      context.fillStyle = "red";
+      context.fillText("Yes", 478, 428);
+      context.fillStyle = "gray";
+      context.fillText("No", 478, 458);
+    } else {
+      context.fillStyle = "red";
+      context.fillText("No", 478, 458);
+      context.fillStyle = "gray";
+      context.fillText("Yes", 478, 428);
+    }
+  }
+  
+  function drawCasinoBanner() {
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
     drawPlayer();
     drawSidebar();
     context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
     context.font = "43px sans-serif";
     context.fillStyle = "black";
-    context.fillText("賭   場", 322, 142);
+    context.fillText("賭  場", 322, 142);
     context.fillStyle = "yellow";
-    context.fillText("賭   場", 320, 140);
-    
-    if (parkDelay < 50) {
-      ++parkDelay;
+    context.fillText("賭  場", 320, 140);
+    if (casinoDelay == 49) {
+      currentPlayer.cash -= 1000;
+      casinoStatus = 0; // bet
+      casinoDice = [0, 1, 2];
+      casinoResult = null;
+      numOfCoins = 1;
+      casinoOverSquare = 's';
+    }
+  }
+  
+  function drawCasinoRolling() {
+    drawCasinoResult();
+    if (currentPlayer.robot) {
+      if (casinoDelay < 250) {
+        ++casinoDelay;
+        if (casinoDelay == 210) {
+          if (Math.floor(Math.random() * 2) == 0) {
+            cursorPos.y = 425;
+          } else {
+            cursorPos.y = 455;
+          }
+        }
+        if (casinoDelay == 249) {
+          casinoJudge();
+          if (casinoStatus == 0) {
+            casinoDelay = 50;
+          }
+        }
+      }
     } else {
-      parkDelay = 0;
+      drawCasinoDialog();
+    }
+  }
+  
+  function ani_casino() {
+    if (currentPlayer.cash < 1000) {
+      if (casinoDelay < 100) {
+        ++casinoDelay;
+        drawMap(currentPlayer.position.x, currentPlayer.position.y);
+        drawPlayer();
+        drawSidebar();
+        context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
+        context.font = "43px sans-serif";
+        context.fillStyle = "black";
+        context.fillText("賭  場", 322, 142);
+        context.fillStyle = "yellow";
+        context.fillText("賭  場", 320, 140);
+        if (casinoDelay > 50) {
+          context.drawImage(BubbleImg, 0, 0, 90, 45, 327, 123, 180, 90);
+          context.font = "35px sans-serif";
+          context.fillStyle = "black";
+          context.fillText("沒帶錢呀", 350, 180);
+          context.fillStyle = "red";
+          context.fillText("沒帶錢呀", 352, 178);
+          if (casinoDelay == 99) {
+            casinoDelay = 0;
+            turnToNextPlayer();
+          }
+        }
+      }
+    }
+    else if (casinoDelay < 50) {
+      ++casinoDelay;
+      drawCasinoBanner();
+    } else if (casinoDelay < 550) {
+      context.drawImage(CasinoImg, 0, 0, 320, 240, 0, 0, CanvasWidth, CanvasHeight); // Background
+      switch (casinoStatus) {
+      case 0:
+        if (currentPlayer.robot) {
+          if (casinoDelay < 150) { // wait for two seconds
+            ++casinoDelay;
+            if (casinoDelay == 55) {
+              if (Math.floor(Math.random() * 2) == 0) {
+                cursorPos.x = 200;
+                cursorPos.y = 354;
+              } else {
+                cursorPos.x = 356;
+                cursorPos.y = 354;
+              }
+              cko_casino();
+            }
+          }
+          if (casinoDelay == 149) {
+            console.log("robot bet " + casinoOverSquare);
+            casinoJudge();
+            if (casinoStatus == 1) {
+              casinoDelay = 200;
+              console.log("robot wins");
+            } else {
+              console.log("robot loses");
+            }
+          }
+        }
+        drawCasinoBet();
+        break;
+      case 1:
+        drawCasinoRolling();
+        break;
+      case 2:
+        drawCasinoResult();
+        if (casinoDelay < 550) {
+          ++casinoDelay;
+        }
+      }
+    } else if (casinoDelay < 600) {
+      ++casinoDelay;
+      var txt = "見好就收";
+      if (numOfCoins == 0) { // 真是可惜
+        txt = "真是可惜";
+      } else if (numOfCoins > 4) { // 大捞一票
+        txt = "大撈一票";
+      }
+      drawMap(currentPlayer.position.x, currentPlayer.position.y);
+      drawPlayer();
+      drawSidebar();
+
+      context.drawImage(BubbleImg, 0, 0, 90, 45, 327, 123, 180, 90);
+      context.font = "35px sans-serif";
+      context.fillStyle = "black";
+      context.fillText(txt, 350, 180);
+      context.fillStyle = "red";
+      context.fillText(txt, 352, 178);
+    } else {
+      drawMap(currentPlayer.position.x, currentPlayer.position.y);
+      drawPlayer();
+      drawSidebar();
+      casinoDelay = 0;
       turnToNextPlayer();
     }
   }
   
   function kp_casino(e) {
-    console.log("casino keypressed called");
+    var kc = e.keyCode;
+    var entered = false;
+    switch (kc) {
+    case 37: // left
+      if (casinoStatus == 0) { // bet
+        if (cursorPos.x - 80 > 0) {
+          cursorPos.x -= 80;
+        }
+      }
+      break;
+    case 38: // up
+      if (casinoStatus == 0) { // bet
+        if (cursorPos.y - 84 > 144) {
+          cursorPos.y -= 84;
+        }
+      } else if (casinoStatus == 1) {
+        cursorPos.y = 425;
+      }
+      break;
+    case 39: // right
+      if (casinoStatus == 0) {
+        if (cursorPos.x + 80 < 640) {
+          cursorPos.x += 80;
+        }
+      }
+      break;
+    case 40: // down
+      if (casinoStatus == 0) {
+        if (cursorPos.y + 84 < 480) {
+          cursorPos.y += 84;
+        }
+      } else if (casinoStatus == 1) {
+        cursorPos.y = 455;
+      }
+      break;
+    case 32: // space
+    case 13: // enter
+      entered = true;
+      break;
+    } // switch
+    cko_casino();
+    if (entered) {
+      casinoJudge();
+    }
+    console.log("casinoStatus " + casinoStatus);
+  }
+  
+  function casinoJudge() {
+    if (casinoStatus == 0) {
+      for (var i=0; i<3; ++i) {
+        casinoDice[i] = dice() + 1;
+      }
+      if (casinoDice[0] == casinoDice[1] && casinoDice[1] == casinoDice[2]) { // x 100
+        casinoResult = casinoDice[0] * 100 + casinoDice[1] * 10 + casinoDice[2];
+      } else { // Others
+        casinoResult = casinoDice[0] + casinoDice[1] + casinoDice[2];
+      }
+      console.log("casinoResult " + casinoResult);
+      if (casinoOverSquare == 's' && casinoResult < 11 
+          || casinoOverSquare == 'b' && casinoResult > 10
+          || casinoOverSquare == casinoResult) { // Bingo!
+        if (casinoOverSquare == 's' || casinoOverSquare == 'b') {
+          numOfCoins *= 2;
+        } else if (casinoOverSquare > 100) {
+          numOfCoins *= 100;
+        } else {
+          numOfCoins *= 10;
+        }
+        generateCoinsPositions();
+        if (!currentPlayer.robot) {
+          cursorPos.x = 480;
+          cursorPos.y = 425;
+        }
+        casinoStatus = 1;
+      } else {
+        casinoStatus = 2;
+        casinoDelay = 500;
+        numOfCoins = 0;
+      }
+    } else if (casinoStatus == 1) {
+      if (cursorPos.y == 425) {
+        casinoStatus = 0;
+      } else {
+        currentPlayer.cash += numOfCoins * 1000;
+        casinoStatus = 2;
+        casinoDelay = 500;
+      }
+    }
+  }
+  
+  function generateCoinsPositions() {
+    var noc = numOfCoins-1 > 8 ? 8 : numOfCoins-1;
+    console.log("noc " + noc);
+    coinsPos = [];
+    while (noc--) {
+      var dx = cursorPos.x - 31 + Math.floor(Math.random() * 20 * noc - 2 * noc);
+      var dy = cursorPos.y - 34 + Math.floor(Math.random() * 20 * noc - 2 * noc);
+      coinsPos.push({x:dx, y:dy});
+    }
+    coinsPos.push({x: cursorPos.x, y: cursorPos.y});
+  }
+  
+  function cko_casino() {
+    if (casinoStatus == 0) {
+      var ix = Math.floor(cursorPos.x / 80);
+      var iy = Math.floor((cursorPos.y - 144) / 84);
+      casinoOverSquare = CasinoMatrix[iy][ix];
+      console.log("casinoOverSquare " + casinoOverSquare);      
+    }
   }
 
   var parkDelay = 0;
@@ -973,16 +1311,14 @@ $(function() {
     console.log("market callback called");
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
     context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
-
+    drawPlayer();
+    drawSidebar();
     context.font = "43px sans-serif";
     context.fillStyle = "black";
     context.fillText("黑   市", 322, 142);
-
     context.fillStyle = "yellow";
     context.fillText("黑   市", 320, 140);
 
-    drawPlayer();
-    drawSidebar();
     if (parkDelay < 50) {
       ++parkDelay;
     } else {
@@ -2105,7 +2441,7 @@ $(function() {
       null, null, kp_carnival, null, null, kp_bank, kp_market, null, kp_passby, kp_passbank];
   
   var GameDate = {
-    Months: [null,1,28,31,30,31,30,31,31,30,31,30,31],
+    Months: [null,31,28,31,30,31,30,31,31,30,31,30,31],
     Prime: [null,31,29,31,30,31,30,31,31,30,31,30,31]
   }
   
@@ -2169,14 +2505,14 @@ $(function() {
         if (block.lx && block.ly) {
           block.mx = block.lx * GridLength;
           block.my = block.ly * GridLength;
-          
+          /*
           if (Game.debug) {
             block.owner = 1;
             block.bldg = 0;
             soldLands[block.lx].push(block);
             //bldgLands[block.lx].push(block);
           }
-          
+          */
         }
       }
     },
