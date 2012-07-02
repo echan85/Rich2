@@ -608,7 +608,6 @@ $(function() {
     if (Players.isMoving) return;
     if (currentPlayer.robot) return;
     var kc = e.keyCode;
-    //console.log("KeyPressed " + kc);
     switch (kc) {
     case 37: // left
       cursorPos.x -= CursorMovement;
@@ -634,7 +633,6 @@ $(function() {
     var action = cko_default();
     if (defaultEntered) {
       if (action) {
-        console.log("Call enterAction");
         action();
       } else {
         console.log("no enterAction defined");
@@ -643,13 +641,25 @@ $(function() {
   }
   
   function ani_court() {
-    console.log("court callback called");
-    turnToNextPlayer();
+    drawMap(currentPlayer.position.x, currentPlayer.position.y);
+    drawPlayer();
+    drawSidebar();
+    context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
+    context.font = "43px sans-serif";
+    context.fillStyle = "black";
+    context.fillText("法  院", 322, 142);
+    context.fillStyle = "yellow";
+    context.fillText("法  院", 320, 140);
+    if (parkDelay < 50) {
+      ++parkDelay;
+    } else {
+      parkDelay = 0;
+      turnToNextPlayer();
+    }
   }
   var obj_court = new Array();
   
   function kp_court(e) {
-    console.log("court keypressed called");
   }
   
   function ani_stock() {
@@ -671,7 +681,6 @@ $(function() {
   }
   
   function kp_stock(e) {
-    console.log("stock key pressed called");
   }
   
   var chanceDelay = 0;
@@ -709,7 +718,6 @@ $(function() {
 
   var newsDelay = 0;
   function ani_news() {
-    console.log("news callback called");
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
     drawPlayer();
     drawSidebar();
@@ -1121,7 +1129,6 @@ $(function() {
   
   function generateCoinsPositions() {
     var noc = numOfCoins-1 > 8 ? 8 : numOfCoins-1;
-    console.log("noc " + noc);
     coinsPos = [];
     while (noc--) {
       var dx = cursorPos.x - 31 + Math.floor(Math.random() * 20 * noc - 2 * noc);
@@ -1136,7 +1143,6 @@ $(function() {
       var ix = Math.floor(cursorPos.x / 80);
       var iy = Math.floor((cursorPos.y - 144) / 84);
       casinoOverSquare = CasinoMatrix[iy][ix];
-      console.log("casinoOverSquare " + casinoOverSquare);      
     }
   }
 
@@ -1183,7 +1189,6 @@ $(function() {
   }
   
   function ani_commuchest() {
-    console.log("community chest callback called");
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
     context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
 
@@ -1212,7 +1217,6 @@ $(function() {
   }
   
   function ani_carnival() {
-    console.log("carnival callback called");
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
     context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
 
@@ -1234,11 +1238,9 @@ $(function() {
   }
   
   function kp_carnival(e) {
-    console.log("carnival key pressed called");
   }
   
   function ani_hospital() {
-    console.log("hospital callback called");
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
     context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
 
@@ -1260,7 +1262,6 @@ $(function() {
   }
   
   function ani_jail() {
-    console.log("jail callback called");
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
     context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
 
@@ -1282,7 +1283,6 @@ $(function() {
   }
 
   function ani_bank() {
-    console.log("bank callback called");
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
     drawPlayer();
     drawSidebar();
@@ -1304,11 +1304,9 @@ $(function() {
   }
   
   function kp_bank(e) {
-    console.log("bank key pressed called");
   }
 
   function ani_market() {
-    console.log("market callback called");
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
     context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
     drawPlayer();
@@ -1328,11 +1326,9 @@ $(function() {
   }
 
   function kp_market(e) {
-    console.log("market keypressed called");
   }
 
   function ani_road() {
-    console.log("road callback called");
     drawMap(currentPlayer.position.x, currentPlayer.position.y);
     drawPlayer();
     drawSidebar();
@@ -1552,7 +1548,6 @@ $(function() {
       if (owner == currentPlayerIndex) {
         var bldg = block.bldg;
         var cost = city.upgrade;
-        //console.log(bldg + " " + cost);
         if (bldg == 5 || cost > cash) { // do nothing if not enough cash or the bldg is already skyscraper
           passbyPlayAni = null;
           passbyPlayAniParam = null;
@@ -1636,7 +1631,6 @@ $(function() {
   function kp_passby(e) {
     // If the animation is playing, then disable keyboard intrupt
     var kc = e.keyCode;
-    //console.log("KeyPressed " + kc);
     switch (kc) {
     case 38: // up
       cursorPos.y = 224;
@@ -1738,7 +1732,6 @@ $(function() {
     if (!currentPlayer.robot) {
       drawBankDialog();
     }
-    //console.log("level0Selection " + level0Selection);
     if (passbankPlayAni) {
       passbankPlayAni(passbankPlayAniParam);
       return;
@@ -1772,7 +1765,6 @@ $(function() {
   var transferMoney = 0;
   var level0Selection = 0;
   function drawDepositWithdrawDialog(choice) {
-    //console.log("choice " + choice);
     context.beginPath();
     context.rect(223, 247, 340, 86);
     context.fillStyle = '#030B80';
@@ -1834,7 +1826,6 @@ $(function() {
           cursorPos.x = 289;
           cursorPos.y = 349;
         } else {
-          console.log("quit");
           cursorPos.x = CursorPositions[0].x;
           cursorPos.y = CursorPositions[0].y;
           passbankPlayAni = null;
@@ -1943,7 +1934,6 @@ $(function() {
           }
         }
         monthlyWinner = monthlyRank[0].player.id + 1;
-        console.log(monthlyRank);
       }
       context.drawImage(WinImg, 0, 0, 320, 240, 0, 0, CanvasWidth, CanvasHeight);
       for (var i=0; i<monthlyRank.length; ++i) {
@@ -2393,7 +2383,6 @@ $(function() {
           this.path.shift();
           if (tgtBlock && tgtBlock.t == 12 && tgtBlock.s) {
             if (!passedBank) { // If passing bank
-              console.log("passing bank");
               cursorPos.x = CursorPositions[16].x;
               cursorPos.y = CursorPositions[16].y;
               Game.status = 16;
