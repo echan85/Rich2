@@ -39,6 +39,7 @@ var CasinoImg = loadImage("casino.png");
 var CoinImg = loadImage("coin.png");
 var BubbleImg = loadImage("bubble.png");
 var WinImg = loadImage("winning.png"); // Including dollar background image
+var StockImg = loadImage("stock.png");
 var BldgUpgradeMsg = [
   "加蓋平房","改建店鋪","擴建商場","蓋商業大樓","建摩天大廈"
 ];
@@ -56,7 +57,7 @@ bag1Audio.play();
 var CursorPositions = [
   {x: 251, y: 45}, // default
   {x: 251, y: 45}, // Court
-  {x: 251, y: 45}, // Stock
+  {x: 562, y: 26}, // Stock
   {x: 251, y: 45}, // Chance
   {x: 251, y: 45}, // News
   {x: 251, y: 45}, // Tax
@@ -110,6 +111,7 @@ $(function() {
   var currentPlayerIndex;
   var maxNumOfPlayers;
   var cityList;
+  var stockList;
   var passedBank = false;
   var monthlyScreenImg = null;
 
@@ -534,6 +536,9 @@ $(function() {
           display: "嘉義市"
         }
       },
+      stockList: ["中  鋼", "華  隆", "台  泥", "聲  寶", "大  同", "台  塑", "國  泰", "新  光", "统  一", 
+                  "味  全", "遠  東", "大  宇", "中  興", "南  僑", "台  達", "三商行", "北企銀", "裕  隆", 
+                  "長  榮", "宏  碁"],
     }
   };
 
@@ -662,25 +667,289 @@ $(function() {
   function kp_court(e) {
   }
   
-  function ani_stock() {
-    drawMap(currentPlayer.position.x, currentPlayer.position.y);
-    drawPlayer();
-    drawSidebar();
-    context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
-    context.font = "43px sans-serif";
+  var stockDelay = 0;
+  var stockPage = 1;
+  var stockStatus = 0; // 0: menu, 1: buyselect, 2: sellselect, 3: query, 4: leave, 5: buyabacus, 6: sellabacus
+  var stockMenuIntent = 0; // 0: next page, 1: buy, 2: sell, 3: query, 4: leave;
+  var stockItemIntent = 0;
+  var stockVolume;
+  var stockMax;
+  var stockChange;
+  var StockMenu = ["下一頁", "買  進", "賣  出", "查  詢", "離  開"];
+  var stockSelected;
+  function drawStock() {
+    context.drawImage(StockImg, 0, 0, 320, 240, 0, 0, 640, 480);
+    
     context.fillStyle = "black";
-    context.fillText("股  市", 322, 142);
+    context.font = "33px sans-serif";
+    context.fillText(currentPlayer.name, 350, 64);    
+    context.fillStyle = "blue";
+    context.fillText(currentPlayer.name, 348, 62);    
+
+    // Draw data
+    context.font = "25px sans-serif";
+    context.fillStyle = "black";
+    context.fillText(currentPlayer.cash, 350, 129);
+    context.fillText(currentPlayer.deposit, 350, 191);
+    context.fillText(currentPlayer.stocktot, 124, 191);
     context.fillStyle = "yellow";
-    context.fillText("股  市", 320, 140);
-    if (parkDelay < 50) {
-      ++parkDelay;
-    } else {
-      parkDelay = 0;
-      turnToNextPlayer();
+    context.fillText(currentPlayer.cash, 348, 127);
+    context.fillText(currentPlayer.deposit, 348, 189);
+    context.fillText(currentPlayer.stocktot, 122, 189);
+    
+    // Column Names
+    context.font = "33px sans-serif";
+    context.fillStyle = "blue";
+    context.fillText(stockPage, 82, 257);
+    
+    for (var s=0; s<5; ++s) {
+      var id = (stockPage - 1) * 5 + s;
+      var y = 305 + 42 * s;
+      context.fillStyle = "pink";
+      context.fillText(stockList[id].name, 16, y); 
+      context.fillStyle = "orange";
+      context.fillText(stockList[id].price, 163, y);
+      var stock = currentPlayer.stock[id];
+      if (stock.volume > 0) {
+        context.fillText(stock.price, 355, y);
+        context.fillText(stock.volume, 542, y);
+      } else {
+        context.fillStyle = "green";
+        context.fillText("------", 369, y);
+        context.fillText("------", 561, y);
+      }
+    }
+    
+    if (currentPlayer.robot) return;
+    // Menu
+    context.font = "33px sans-serif";
+    context.fillStyle = "blue";
+    for (var id=0, l=StockMenu.length; id<l; ++id) {
+      context.fillText(StockMenu[id], 518, 38 + 44 * id);
+    }
+    
+    context.fillStyle = "yellow";
+    context.fillText(StockMenu[stockMenuIntent], 518, 38 + 44 * stockMenuIntent);
+    
+    if (stockStatus == 1 || stockStatus == 2) {
+      context.beginPath();
+      context.rect(0, 268 + stockItemIntent * 42, 305, 42);
+      context.fillStyle = "rgba(143, 29, 23, 0.6)";
+      context.fill();
+    } else if (stockStatus == 5 || stockStatus == 6) {
+      context.beginPath();
+      context.rect(189, 143, 317, 118);
+      context.fillStyle = "rgb(107, 22, 17)";
+      context.fill();
+      context.strokeStyle = 'rgb(54, 11, 9)';
+      context.stroke();
+      context.drawImage(AbacusImg, 189, 265);
+      context.drawImage(AbacusImg, 246, 0, 20, 50, cursorPos.x - 10, cursorPos.y - 25, 20, 50);
+      var msg = "買  進";
+      if (stockMenuIntent == 2) {
+        msg = "賣  出";
+      }
+      context.fillStyle = "blue";
+      context.fillText(msg, 223, 246);
+      context.fillStyle = "white";
+      context.fillText(stockList[stockSelected].name, 205, 193);
+      context.fillStyle = "yellow";
+      context.fillText("( 0 - " + stockMax + ")", 305, 193);
+      context.fillText(stockVolume, 340, 251);
+    }
+  }
+  function ani_stock() {
+    if (stockDelay < 50) {
+      ++stockDelay;
+      drawMap(currentPlayer.position.x, currentPlayer.position.y);
+      drawPlayer();
+      drawSidebar();
+      context.drawImage(LandLabelImg, 0, 0, 180, 130, 292, 86, 180, 75);
+      context.font = "43px sans-serif";
+      context.fillStyle = "black";
+      context.fillText("股  市", 322, 142);
+      context.fillStyle = "yellow";
+      context.fillText("股  市", 320, 140);
+      if (stockDelay == 49) {
+        stockMenuIntent = 0;
+        stockStatus = 0;
+        stockPage = 1;
+        stockChange = 0;
+      }
+    } else if (stockDelay == 50) {
+      if (currentPlayer.robot) { // TODO: need AI
+        stockDelay = 51;
+        return;
+      }
+      switch (stockStatus) {
+        case 0: // Menu 
+        case 1: case 2: // Buy/sell select
+        case 6: case 5: // buy/sell abacus
+        drawStock();
+        drawCursor();
+        break;
+        case 3: // query
+        break;
+        case 4: // leave
+        drawStock();
+        stockDelay = 51;
+        break;
+      }
+    } else if (stockDelay < 100) {
+      drawMap(currentPlayer.position.x, currentPlayer.position.y);
+      drawPlayer();
+      drawSidebar();
+      if (stockChange == 0) {
+        context.drawImage(BubbleImg, 0, 0, 90, 45, 327, 123, 180, 90);
+        context.font = "35px sans-serif";
+        context.fillStyle = "black";
+        context.fillText("時機不對", 350, 180);
+        context.fillStyle = "red";
+        context.fillText("時機不對", 352, 178);
+      }
+      ++stockDelay;
+      if (stockDelay == 99) {
+        stockDelay = 0;
+        turnToNextPlayer();
+      }
     }
   }
   
   function kp_stock(e) {
+    // If the animation is playing, then disable keyboard intrupt
+    if (currentPlayer.robot) return;
+    var kc = e.keyCode;
+    var entered = false;
+    switch (kc) {
+    case 27: // ESC
+      stockStatus = 0;
+      stockMenuIntent = 0;
+      cursorPos.x = CursorPositions[2].x;
+      cursorPos.y = CursorPositions[2].y;
+      break;
+    case 37: // left
+      if (stockStatus == 6 || stockStatus == 5) {
+        --cursorPos.x;
+        if (cursorPos.x < 209) {
+          cursorPos.x = 209;
+        }
+      }
+      break;
+    case 38: // up
+      if (stockStatus == 0) {
+        cursorPos.y -= 44;
+        if (cursorPos.y < 26) cursorPos.y = 26;
+      } else if (stockStatus == 1 || stockStatus == 2) {
+        cursorPos.y -= 42;
+        if (cursorPos.y < 286) cursorPos.y = 286;
+      }
+      break;
+    case 39: // right
+      if (stockStatus == 6 || stockStatus == 5) {
+        ++cursorPos.x;
+        if (cursorPos.x > 409) {
+          cursorPos.x = 409;
+        }
+      }
+      break;
+    case 40: // down
+      if (stockStatus == 0) {
+        cursorPos.y += 44;
+        if (cursorPos.y > 202) {
+          cursorPos.y = 202;
+        }
+      } else if (stockStatus == 1 || stockStatus == 2) {
+        cursorPos.y += 42;
+        if (cursorPos.y > 454) cursorPos.y = 454;
+      }
+      break;
+    case 32: // space
+    case 13: // enter
+      entered = true;
+      break;
+    }
+    cko_stock();
+    if (entered) {
+      switch (stockStatus) {
+        case 0:
+        switch (stockMenuIntent) {
+          case 0: // Next page
+          ++stockPage;
+          if (stockPage > 4) stockPage = 1;
+          break;
+          case 1: case 2: case 3: case 4:
+          stockItemIntent = 0;
+          stockStatus = stockMenuIntent;
+          cursorPos.y = 286;
+          cursorPos.x = 160;
+          break;
+        }
+        break;
+        case 1: case 2: // Bug/sell select
+        stockSelected = (stockPage - 1) * 5 + stockItemIntent;
+        stockVolume = 0;
+        if (stockStatus == 1) { // buy
+          stockMax = Math.floor(currentPlayer.cash / stockList[stockSelected].price);
+        } else { // sell, if the player does not buy this one, then goes back to main menu
+          var s = currentPlayer.stock[stockSelected];
+          if (s != null && s.volume > 0) {
+            stockMax = s.volume;
+          } else {
+            stockStatus = 0;
+            stockMenuIntent = 0;
+            cursorPos.x = CursorPositions[2].x;
+            cursorPos.y = CursorPositions[2].y;
+            return;
+          }
+        }
+        if (stockMax > 50000) stockMax = 50000;
+        cursorPos.x = 209;
+        cursorPos.y = 290;
+        stockStatus = stockMenuIntent + 4;
+        break;
+        case 3: // query
+        stockStatus = 0;
+        break;
+        case 6: case 5: // buy/sell abacus
+        var price = Math.floor(stockVolume * stockList[stockSelected].price);
+        if (stockStatus == 6) { // sell
+          currentPlayer.cash += price;
+          currentPlayer.stocktot -= price;
+          currentPlayer.stock[stockSelected].volume -= stockVolume;
+          stockChange -= price;
+          console.log("stock sell " + price);
+        } else { // buy
+          currentPlayer.cash -= price;
+          stockChange -= price;
+          currentPlayer.stocktot += price;
+          currentPlayer.stock[stockSelected].volume += stockVolume;
+          currentPlayer.stock[stockSelected].price = stockList[stockSelected].price;
+          console.log("stock buy " + price);
+        }
+        stockStatus = 0;
+        stockMenuIntent = 0;
+        cursorPos.x = CursorPositions[2].x;
+        cursorPos.y = CursorPositions[2].y;
+        break;
+      }
+    }
+  }
+  
+  function cko_stock() {
+    switch (stockStatus) {
+      case 0: // Menu
+      stockMenuIntent = Math.floor((cursorPos.y - 26) / 44);
+      console.log("stockMenuIntent " + stockMenuIntent + " stockStatus " + stockStatus);
+      break;
+      case 1: case 2: // buy/sell select
+      stockItemIntent = Math.floor((cursorPos.y - 286) / 42);
+      console.log("stockItemIntent " + stockItemIntent);
+      break;
+      case 6: case 5: // buy/sell abacus
+      stockVolume = Math.floor((cursorPos.x - 209) / 200 * stockMax);
+      console.log("stockVolume " + stockVolume);
+      break;
+    }
   }
   
   var chanceDelay = 0;
@@ -1037,6 +1306,7 @@ $(function() {
   }
   
   function kp_casino(e) {
+    if (currentPlayer.robot) return;
     var kc = e.keyCode;
     var entered = false;
     switch (kc) {
@@ -2466,6 +2736,9 @@ $(function() {
         player.deity = 0;
         player.robot = true;
         player.stock = [];
+        for (var j=0, len=currentLevel.stockList.length; j<len; ++j) {
+          player.stock.push({volume: 0, price: 0});
+        }
         player.cards = []; // maximum: 9
         player.blocks = [];
       }
@@ -2475,6 +2748,18 @@ $(function() {
       currentPlayer = Players[playerList[currentPlayerIndex]];
       currentPlayer.robot = false;
       cityList = currentLevel.cityList;
+      stockList = [];
+      for (var i=0, l=currentLevel.stockList.length; i<l; ++i) {
+        var price = Math.random() * 200;
+        var volume = Math.floor(Math.random() * 18000) + 4000;
+        var percent = (Math.random() * 5 - 2.5) / 100;
+        var change = price * percent;
+        stockList.push({name: currentLevel.stockList[i], 
+                        price: price.toFixed(2), 
+                        volume: volume,
+                        change: change.toFixed(2), 
+                        percent: percent});
+      }
       // Bind key intrupt
       $(document).keydown(function(e) {
         keyPressedCallbacks[Game.status](e);
