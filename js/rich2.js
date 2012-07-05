@@ -261,11 +261,47 @@ $(function() {
     console.log("snapshot taken");
   }
   
+  function updateStockMarket() {
+    // I don't know anything about the stock market rules, so I randomize most data, 
+    // and only stablize the trends.
+    for (var i=0; i<20; ++i) {
+      var stock = stockList[i];
+      var dir = stock.moveup;
+      var price = stock.price;
+      // The volume is faked
+      var volume = Math.floor(Math.random() * 18000) + 4000;
+      var percent = (Math.random() * 10 - 5) / 100;
+      var change;
+      if (dir && percent < 0) {
+        percent += 2.5; // compensate the loss for no reason
+      } else if (!dir && percent > 0) {
+        percent -= 2.5;
+      }
+      var change = price * percent;
+      price = parseFloat(price) + change;
+      var oriMoveup = stock.moveup;
+      var moveup = (Math.random() * 15) < stock.days ? !oriMoveup : oriMoveup;
+
+      stock.volume = volume;
+      stock.price = price;
+      stock.change = change;
+      stock.percent = percent;
+      stock.moveup = moveup;
+      if (oriMoveup != moveup) {
+        stock.days = 1;
+      } else {
+        ++stock.days;
+      }
+      console.log(stock);
+    }
+  }
+  
   function turnToNextPlayer() {
     var report = false;
     do {
       ++currentPlayerIndex;
       if (currentPlayerIndex == maxNumOfPlayers) {
+        updateStockMarket();
         currentPlayerIndex = 0;
         ++Game.day;
         if (Game.day > Game.Months[Game.month]) {
@@ -291,6 +327,8 @@ $(function() {
       screenSnapshot();
       Game.status = 17;
     } else {
+      cursorPos.x = CursorPositions[0].x;
+      cursorPos.y = CursorPositions[0].y;
       Game.status = 0;
     }
   }
@@ -321,7 +359,7 @@ $(function() {
       width: MenuOptionWidth,
       height: MenuOptionHeight,
       action: function() {
-        console.log("[MenuAction] Search");
+        drawStockBoard();
       }
     },
     {
@@ -425,7 +463,7 @@ $(function() {
       mapImg: loadImage("taiwan.png"),
       mapSize: 36, // There are 36x36 blocks in the map
       MapLength: 1728, 
-      startPos: [{bid: 1, d: 3}, {bid: 87, d: 3}, {bid: 86, d: 3}, {bid: 143, d: 3}],
+      startPos: [{bid: 13, d: 3}, {bid: 87, d: 3}, {bid: 86, d: 3}, {bid: 143, d: 3}],
       cityList: {
         nantou: {
           price: 500, upgrade: 80,
@@ -758,6 +796,43 @@ $(function() {
       context.fillText(stockVolume, 340, 251);
     }
   }
+  
+  var stockFirstHalf = 0;
+  function drawStockBoard() {
+    context.beginPath();
+    context.rect(0, 0, 640, 480);
+    context.fillStyle = 'black';
+    context.fill();
+    if (stockFirstHalf == 0) {
+      context.font = "33px sans-serif";
+      context.fillStyle = "blue";
+      context.fillText("成交價", 160, 57);
+      context.fillText("成交量", 288, 57);
+      context.fillText("漲幅%", 528, 57);
+      
+      context.fillStyle = "red";
+      context.fillText("漲", 432, 57);
+      context.fillStyle = "green";
+      context.fillText("跌", 464, 57);
+    }
+    context.font = "25px sans-serif";
+    for (var i=0; i<10; ++i) {
+      var stock = stockList[i + stockFirstHalf * 10];
+      context.fillStyle = "white";
+      context.fillText(stock.name, 18, 105 + 40 * i - stockFirstHalf * 65);
+      context.fillText(stock.volume, 288, 105 + 40 * i - stockFirstHalf * 65);
+      var per = parseFloat(stock.percent) * 100;
+      context.fillText(per.toFixed(2), 528, 105 + 40 * i - stockFirstHalf * 65);
+      context.fillStyle = "yellow";
+      var pri = parseFloat(stock.price);
+      context.fillText(pri.toFixed(2), 160, 105 + 40 * i - stockFirstHalf * 65);
+      if (stock.change > 0) context.fillStyle = "red";
+      else context.fillStyle = "green";
+      var chg = parseFloat(stock.change);
+      context.fillText(chg.toFixed(2), 414, 105 + 40 * i - stockFirstHalf * 65);
+    }
+  }
+  
   function ani_stock() {
     if (stockDelay < 50) {
       ++stockDelay;
@@ -789,6 +864,7 @@ $(function() {
         drawCursor();
         break;
         case 3: // query
+        drawStockBoard();
         break;
         case 4: // leave
         drawStock();
@@ -908,7 +984,14 @@ $(function() {
         stockStatus = stockMenuIntent + 4;
         break;
         case 3: // query
-        stockStatus = 0;
+        if (stockFirstHalf == 0) {
+          stockFirstHalf = 1;
+        } else {
+          stockFirstHalf = 0;
+          stockStatus = 0;
+          cursorPos.x = CursorPositions[2].x;
+          cursorPos.y = CursorPositions[2].y;
+        }
         break;
         case 6: case 5: // buy/sell abacus
         var price = Math.floor(stockVolume * stockList[stockSelected].price);
@@ -2617,8 +2700,8 @@ $(function() {
     dice1: 0,
     dice2: 0,
     dice: function() {
-      this.dice1 = dice() + 1;
-      this.dice2 = dice() + 1;
+      this.dice1 = 1;//dice() + 1;
+      this.dice2 = 1;//dice() + 1;
       var steps = this.dice1 + this.dice2;
       console.log(steps);
       var bid = currentPlayer.gamePos.bid, dir = currentPlayer.gamePos.d, block, nextlist, rev, set;
@@ -2749,16 +2832,20 @@ $(function() {
       currentPlayer.robot = false;
       cityList = currentLevel.cityList;
       stockList = [];
+      // initialize stock market
       for (var i=0, l=currentLevel.stockList.length; i<l; ++i) {
-        var price = Math.random() * 200;
+        var price = Math.random() * 200 + 10; // No one can be lower than 10.00
         var volume = Math.floor(Math.random() * 18000) + 4000;
         var percent = (Math.random() * 5 - 2.5) / 100;
         var change = price * percent;
+        var moveup = Math.floor(Math.random() * 2) == 0 ? true : false;
         stockList.push({name: currentLevel.stockList[i], 
                         price: price.toFixed(2), 
                         volume: volume,
                         change: change.toFixed(2), 
-                        percent: percent});
+                        percent: percent,
+                        moveup: moveup,
+                        days: 0});
       }
       // Bind key intrupt
       $(document).keydown(function(e) {
