@@ -463,7 +463,7 @@ $(function() {
       mapImg: loadImage("taiwan.png"),
       mapSize: 36, // There are 36x36 blocks in the map
       MapLength: 1728, 
-      startPos: [{bid: 13, d: 3}, {bid: 87, d: 3}, {bid: 86, d: 3}, {bid: 143, d: 3}],
+      startPos: [{bid: 1, d: 3}, {bid: 87, d: 3}, {bid: 86, d: 3}, {bid: 143, d: 3}],
       cityList: {
         nantou: {
           price: 500, upgrade: 80,
@@ -1222,7 +1222,7 @@ $(function() {
       context.rect(CasinoRMatrix[casinoResult][0] * 80, CasinoRMatrix[casinoResult][1] * 84 + 144, 80, 84);
       context.fillStyle = "rgba(242, 48, 27, 0.6)";
       context.fill();
-      drawCasinoDice(casinoDice[0], casinoDice[1], casinoDice[2]);
+      drawCasinoDice(casinoDice[0] - 1, casinoDice[1] - 1, casinoDice[2] - 1);
       drawCoins();
       drawCursor();
   }
@@ -1447,9 +1447,9 @@ $(function() {
       } else { // Others
         casinoResult = casinoDice[0] + casinoDice[1] + casinoDice[2];
       }
-      console.log("casinoResult " + casinoResult);
+      console.log("casinoResult " + casinoResult + " dice1 " + casinoDice[0] + " dice2 " + casinoDice[1] + " dice3 " + casinoDice[2]);
       if (casinoOverSquare == 's' && casinoResult < 11 
-          || casinoOverSquare == 'b' && casinoResult > 10
+          || casinoOverSquare == 'b' && casinoResult > 10 && casinoResult < 19
           || casinoOverSquare == casinoResult) { // Bingo!
         if (casinoOverSquare == 's' || casinoOverSquare == 'b') {
           numOfCoins *= 2;
@@ -2700,8 +2700,8 @@ $(function() {
     dice1: 0,
     dice2: 0,
     dice: function() {
-      this.dice1 = 1;//dice() + 1;
-      this.dice2 = 1;//dice() + 1;
+      this.dice1 = dice() + 1;
+      this.dice2 = dice() + 1;
       var steps = this.dice1 + this.dice2;
       console.log(steps);
       var bid = currentPlayer.gamePos.bid, dir = currentPlayer.gamePos.d, block, nextlist, rev, set;
