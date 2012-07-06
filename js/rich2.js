@@ -40,6 +40,7 @@ var CoinImg = loadImage("coin.png");
 var BubbleImg = loadImage("bubble.png");
 var WinImg = loadImage("winning.png"); // Including dollar background image
 var StockImg = loadImage("stock.png");
+var BuddhaImg = loadImage("buddha.png");
 var BldgUpgradeMsg = [
   "加蓋平房","改建店鋪","擴建商場","蓋商業大樓","建摩天大廈"
 ];
@@ -114,6 +115,7 @@ $(function() {
   var stockList;
   var passedBank = false;
   var monthlyScreenImg = null;
+  var landList;
 
   function drawMap(cx, cy) {
     var llx = cx - MapViewHalfLength;
@@ -207,7 +209,8 @@ $(function() {
   }
 
   function drawPlayer() {
-    for (var i=playerList.length-1; i>=0; --i) {
+    drawBuddha();
+    for (var i=playerList.length-1; i>=0; --i) { // Should change the order, top ones first, bottom ones last
       var playername = playerList[i];
       var player = Players[playername];
       if (!player.alive || player === currentPlayer) continue;
@@ -231,6 +234,15 @@ $(function() {
     context.drawImage(CarImg, d * 52, 0, 52, 52, cx, cy, 52, 52);
     context.drawImage(HeadImg, currentPlayer.id * 168 + d * 42, 0, 42, 42,
        cx, cy - HeadOffset, 42, 42); // 168 = 42 * 4
+  }
+
+  function drawBuddha() {
+    for (var i=0; i<4; ++i) {
+      context.drawImage(BuddhaImg, 48 * i, 0, 48, 48, 
+        SideBarWidth + buddhaPositions[i].x - mapOffsetX, 
+        MenuOptionHeight + buddhaPositions[i].y - mapOffsetY, 48, 48);
+      //context.drawImage(BuddhaImg, 48 * i, 0, 48, 48, );
+    }
   }
 
   function drawCursor() {
@@ -296,6 +308,31 @@ $(function() {
     }
   }
   
+  var buddhaPositions = [{x:0, y:0}, {x:0, y:0}, {x:0, y:0}, {x:0, y:0}];
+  function pickBuddhaPosition(id) {
+    while (true) {
+      var pos = Math.floor(Math.random() * landList.length);
+      var tx = landList[pos].x * 48;
+      var ty = landList[pos].y * 48;
+      for (var i=0; i<4; ++i) if (i != id) {
+        if (buddhaPositions[i].x == tx && buddhaPositions[i].y == ty)
+          break;
+      }
+      if (i == 4) {
+        buddhaPositions[id].x = tx;
+        buddhaPositions[id].y = ty;
+        break;
+      }
+    }
+  }
+  
+  function initbuddhaPosition() {
+    for (var i=0; i<4; ++i) {
+      pickBuddhaPosition(i);
+    }
+  }
+  
+  var firstMonth = true;
   function turnToNextPlayer() {
     var report = false;
     do {
@@ -306,6 +343,10 @@ $(function() {
         ++Game.day;
         if (Game.day > Game.Months[Game.month]) {
           report = true;
+          if (firstMonth) {
+            firstMonth = false;
+            initbuddhaPosition();
+          }
           Game.day = 1;
           ++Game.month;
           if (Game.month > 12) {
@@ -2650,7 +2691,7 @@ $(function() {
   ];
 
   /**
-   * Deity
+   * buddha
    * 0: none
    * 1: Wealth attached
    * 2: Mascot attached
@@ -2771,12 +2812,17 @@ $(function() {
         targetY = tgtBlock.y * GridLength;
         deltaX = (targetX - posx) > 0 ? 1 : ((targetX == posx) ? 0 : -1);
         deltaY = (targetY - posy) > 0 ? 1 : ((targetY == posy) ? 0 : -1);
-        console.log("tgtBid " + tgtBid + " tgtX " + targetX + " tgtY " + targetY + " dx " + deltaX + " dy " + deltaY + " posx " + posx + " posy " + posy);
+        console.log("bd " + currentPlayer.buddha + " tgtBid " + tgtBid + " tgtX " + targetX + " tgtY " + targetY + " dx " + deltaX + " dy " + deltaY + " posx " + posx + " posy " + posy);
       }
       posx += deltaX * SpeedDelta;
       posy += deltaY * SpeedDelta;
       position.x = posx;
       position.y = posy;
+      var bd = currentPlayer.buddha;
+      if (bd >= 0) {
+        buddhaPositions[bd].x = position.x + 20;
+        buddhaPositions[bd].y = position.y - 20;
+      }
     },
   }
 
@@ -2817,7 +2863,7 @@ $(function() {
         player.stocktot = 0;
         player.building = 0;
         player.status = 0;
-        player.deity = 0;
+        player.buddha = -1; // none
         player.robot = true;
         player.stock = [];
         for (var j=0, len=currentLevel.stockList.length; j<len; ++j) {
@@ -2833,6 +2879,7 @@ $(function() {
       currentPlayer.robot = false;
       cityList = currentLevel.cityList;
       stockList = [];
+      landList = [];
       // initialize stock market
       for (var i=0, l=currentLevel.stockList.length; i<l; ++i) {
         var price = Math.random() * 200 + 10; // No one can be lower than 10.00
@@ -2859,7 +2906,10 @@ $(function() {
         soldLands.push(new Array());
         bldgLands.push(new Array());
       }
-      
+      for (var key in mapInfo) {
+        var block = mapInfo[key];
+        if (block.t == 15) landList.push(block);
+      }
       // Walk through mapInfo to multiply each block lx/ly with GridLength
       // Doing is to reduce the calculation in drawMap()
       for (var key in mapInfo) {
@@ -2877,6 +2927,7 @@ $(function() {
           */
         }
       }
+      initbuddhaPosition();
     },
     
     run: function() {
